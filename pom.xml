@@ -125,7 +125,7 @@
         <artifactId>lombok</artifactId>
         <version>1.18.46</version>
     </dependency>
-    <dependency>
+    <!-- <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
         <version>4.2.15.Final</version>
@@ -135,7 +135,7 @@
                 <artifactId>netty-transport-native-io_uring</artifactId>
             </exclusion>
         </exclusions>
-    </dependency>
+    </dependency> -->
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
         <artifactId>fastjson2</artifactId>
