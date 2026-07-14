@@ -7,8 +7,3 @@ spring:
       port: 6379
       password: Daisilong123.
       database: 0
-  task:
-    scheduling:
-      pool:
-        size: 16  
-      thread-name-prefix: taoli   

@@ -6,8 +6,11 @@ import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.annotation.JSONField;
@@ -81,6 +84,20 @@ class DATA{
     private BigDecimal longBidSz,shortBidSz;
     @JSONField(serialize = false)
     private static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> val = new EnumMap<>(Exchange.class) ;
+}
+@Configuration
+class SchedulerConfig {
+
+    @Bean
+    public ThreadPoolTaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(10);
+        scheduler.setThreadNamePrefix("TaoLi.");
+        scheduler.setAwaitTerminationSeconds(60);
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        return scheduler;
+    }
+
 }
 @Slf4j
 @Service
