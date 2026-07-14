@@ -1,4 +1,5 @@
 com\example\Test.class
-com\example\Ticker.class
+com\example\DATA.class
 com\example\Main.class
 com\example\Exchange.class
+com\example\Ticker.class

@@ -1,11 +1,18 @@
 package com.example;
 
+import java.math.BigDecimal;
+import java.util.EnumMap;
+import java.util.Map;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 /***
  * 
@@ -18,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @EnableScheduling
 @SpringBootApplication
-public class Main {
-    public static void main(String[] args) { SpringApplication.run(Main.class, args); }
+public class Main {  
+    public static void main(String[] args) { SpringApplication.run(Main.class, args); } 
 }
 enum Exchange {
     okx,    
@@ -50,6 +57,30 @@ enum Ticker {
     longBidPce,shortBidPce,
     longAskSz,shortAskSz,
     longBidSz,shortBidSz
+}
+@Data
+class DATA{
+    private String coin,longExchange,shortExchange;
+    private BigDecimal openCha,closeCha;
+    private BigDecimal longCha,shortCha;
+    private BigDecimal allFee;
+    private BigDecimal longFee,shortFee;
+    private BigDecimal longRate,ShortRate;
+    private BigDecimal longMaxFee,shortMaxFee;
+    private BigDecimal longIndexCha,shortIndexCha;
+    private BigDecimal longTurnover,shortTurnover;
+    private BigDecimal longLast,shortLast;
+    private BigDecimal longLot,shortLot;
+    private BigDecimal longMinSz,shortMinSz;
+    private BigDecimal longMutil,shortMutil;
+    private BigDecimal longIndex,shortIndex;
+    private BigDecimal longMark,shortMark;
+    private BigDecimal longAskPce,shortAskPce;
+    private BigDecimal longBidPce,shortBidPce;
+    private BigDecimal longAskSz,shortAskSz;
+    private BigDecimal longBidSz,shortBidSz;
+    @JSONField(serialize = false)
+    private static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> val = new EnumMap<>(Exchange.class) ;
 }
 @Slf4j
 @Service
