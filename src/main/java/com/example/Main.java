@@ -16,13 +16,41 @@ import lombok.extern.slf4j.Slf4j;
  * scp -i D:\pzl\pzl.pem .\target\taoli-1.0.jar root@47.91.31.90:~
  * **/
 
-
 @EnableScheduling
 @SpringBootApplication
 public class Main {
     public static void main(String[] args) { SpringApplication.run(Main.class, args); }
 }
-
+enum Exchange {
+    okx,    
+    binance,   
+    bybit,
+    bitget,
+    gate,
+    hyper  
+}
+enum Ticker {
+    coin,    
+    longExchange,shortExchange,   
+    openCha,closeCha,
+    longCha,shortCha,
+    allFee,
+    longFee,shortFee,
+    longRate,ShortRate,
+    longMaxFee,shortMaxFee,
+    longIndexCha,shortIndexCha,
+    longTurnover,shortTurnover,
+    longLast,shortLast,
+    longLot,shortLot,
+    longMinSz,shortMinSz,
+    longMutil,shortMutil,
+    longIndex,shortIndex,
+    longMark,shortMark,
+    longAskPce,shortAskPce,
+    longBidPce,shortBidPce,
+    longAskSz,shortAskSz,
+    longBidSz,shortBidSz
+}
 @Slf4j
 @Service
 class Test {
