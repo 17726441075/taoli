@@ -6,7 +6,7 @@
                                 filePattern="./logs/taoli.log%i" 
                                 immediateFlush="false"
                                 bufferSize="262144"
-                                append="false">
+                                append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %t %-5level %c %msg%n" 
                            charset="UTF-8"/>
             <Policies>
