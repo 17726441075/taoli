@@ -87,7 +87,7 @@ public class Main {
     public static void main(String[] args) { SpringApplication.run(Main.class, args); } 
 }
 @Configuration
-class SchedulerConfig {
+class AllConfig {
 
     @Bean
     public ThreadPoolTaskScheduler taskScheduler() {
