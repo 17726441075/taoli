@@ -739,9 +739,29 @@ class GateService implements ApplicationRunner {
             .sync() ;
     }
 
-    @Scheduled(fixedRate = 200)
+    @Scheduled(fixedRate = 3000)
     public void order_book() throws Exception{
-        
+        String json = client.send(
+                        HttpRequest.newBuilder()
+                                    .uri(URI.create("https://api.gateio.ws/api/v4/futures/usdt/contracts"))
+                                    .GET()
+                                    .header("User-Agent", "Mozilla/5.0")
+                                    .build(),
+                        HttpResponse.BodyHandlers.ofString()
+                     ).body();
+        for(JSONObject x : JSONArray.parseArray(json).toJavaList(JSONObject.class) ){
+            if( !x.getString("type").equals("direct") || !x.getString("status").equals("trading") ) continue; 
+            String baseCoin = Util.exchangeCoinToBase(exchange, x.getString("name")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.lastPcE, x.getBigDecimal("last_price")) ;
+            map.put(Ticker.indexPce, x.getBigDecimal("index_price")) ;
+            map.put(Ticker.markPce, x.getBigDecimal("mark_price")) ;
+            map.put(Ticker.fee, x.getBigDecimal("funding_rate").multiply(BigDecimal.valueOf(100))) ;
+            map.put(Ticker.rateFee, BigDecimal.valueOf(x.getLongValue("funding_interval")/3600)) ;
+            map.put(Ticker.maxFee, x.getBigDecimal("funding_rate_limit").multiply(BigDecimal.valueOf(100))) ;
+        }              
     }
     
 }
