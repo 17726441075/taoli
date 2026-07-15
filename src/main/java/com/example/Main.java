@@ -133,7 +133,6 @@ class AllConfig {
 @Slf4j
 @Service
 class DataService implements InitializingBean{
-    @JSONField(serialize = false)
     public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 
     @Resource
@@ -143,7 +142,6 @@ class DataService implements InitializingBean{
     public void afterPropertiesSet() throws Exception {
         for(var x:Exchange.values())
             futures.put(x, new HashMap<>()) ;
-        log.info(futures.toString());
         String json = client.send(
                             HttpRequest.newBuilder()
                                        .uri(URI.create("https://openapi.okx.com/api/v5/public/instruments?instType=SWAP"))
