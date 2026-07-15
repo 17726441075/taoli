@@ -1,8 +1,11 @@
 package com.example;
 
 import java.math.BigDecimal;
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -97,6 +100,15 @@ class AllConfig {
         return scheduler;
     }
 
+    @Bean
+    public HttpClient httpClient() {
+        return HttpClient.newBuilder()
+                .executor(Executors.newVirtualThreadPerTaskExecutor())
+                .connectTimeout(Duration.ofSeconds(5))  
+                .followRedirects(HttpClient.Redirect.NORMAL) 
+                .build();
+    }
+    
 }
 @Slf4j
 @Service
