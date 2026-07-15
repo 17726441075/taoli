@@ -306,5 +306,24 @@ class OkxService implements ApplicationRunner {
         } 
     }
 
+    @Scheduled(fixedRate = 2000)
+    public void index() throws Exception{
+        String json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://openapi.okx.com/api/v5/market/index-tickers?quoteCcy=USDT"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body(); 
+
+        for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
+            String baseCoin =  x.getString("instId").split("-")[0] ;
+            if( !tickerMap.containsKey(baseCoin) ) 
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.indexPce,x.getBigDecimal("idxPx"));
+        } 
+    }
     
 }
