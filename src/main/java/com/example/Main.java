@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.annotation.JSONField;
 
 import jakarta.annotation.Resource;
 import lombok.Data;
@@ -488,6 +487,52 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.lastPcE, x.getBigDecimal("lastPrice")) ;
         }
         log.info(response.headers().toString());                   
+    }
+    
+}
+@Order(3)
+@Slf4j
+@Service
+class BybitService implements ApplicationRunner {
+    private static final Exchange exchange = Exchange.bybit ;
+
+    @Resource
+    private HttpClient client ;
+
+    private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+    
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+    }
+
+    @Scheduled(fixedRate = 200)
+    public void tickers() throws Exception{
+        String json = client.send(
+                            HttpRequest.newBuilder()
+                                    .uri(URI.create("https://api.bybit.com/v5/market/tickers?category=linear"))
+                                    .GET()
+                                    .header("User-Agent", "Mozilla/5.0")
+                                    .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body();
+        for(JSONObject x : JSON.parseObject(json).getJSONObject("result").getList("list", JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.lastPcE, x.getBigDecimal("lastPrice")) ;
+            map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
+            map.put(Ticker.markPce, x.getBigDecimal("markPrice")) ;
+            map.put(Ticker.turnover, x.getBigDecimal("turnover24h")) ;
+            map.put(Ticker.fee, x.getBigDecimal("fundingRate")) ;
+            map.put(Ticker.askPce, x.getBigDecimal("ask1Price")) ;
+            map.put(Ticker.askSz, x.getBigDecimal("ask1Size")) ;
+            map.put(Ticker.bidPce, x.getBigDecimal("bid1Price")) ;
+            map.put(Ticker.bidSz, x.getBigDecimal("bid1Size")) ;
+            map.put(Ticker.rateFee, x.getBigDecimal("fundingIntervalHour")) ;
+            map.put(Ticker.maxFee, x.getBigDecimal("fundingCap")) ;
+        }              
     }
     
 }
