@@ -282,6 +282,11 @@ class OkxService implements ApplicationRunner {
         this.tickerMap = DataService.futures.get(exchange) ;
     }
 
+    @Scheduled(fixedRate = 1000)
+    public void Monitor() throws Exception{
+        log.info("Monitor");
+    }
+
     @Scheduled(fixedRate = 200)
     public void tickers() throws Exception{
         String json = client.send(
@@ -306,7 +311,7 @@ class OkxService implements ApplicationRunner {
         } 
     }
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 7000)
     public void index() throws Exception{
         String json = client.send(
                             HttpRequest.newBuilder()
