@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -104,7 +105,7 @@ class AllConfig {
     }
 
     @Bean
-    public HttpClient httpClient() {
+    public HttpClient client() {
         return HttpClient.newBuilder()
                 .executor(Executors.newVirtualThreadPerTaskExecutor())
                 .connectTimeout(Duration.ofSeconds(5))  
@@ -118,12 +119,17 @@ class AllConfig {
 @Data
 @Service
 class DataService implements ApplicationRunner{
-
     @JSONField(serialize = false)
     private final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 
+    @Resource
+    private HttpClient client ;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        for(var x:Exchange.values())
+            futures.put(x, new HashMap<>()) ;
+
     }
 
 }
