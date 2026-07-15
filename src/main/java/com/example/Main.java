@@ -143,7 +143,6 @@ class DataService implements ApplicationRunner{
         for(var x:Exchange.values())
             futures.put(x, new HashMap<>()) ;
         log.info(futures.toString());
-
         String json = client.send(
                             HttpRequest.newBuilder()
                                        .uri(URI.create("https://openapi.okx.com/api/v5/public/instruments?instType=SWAP"))
