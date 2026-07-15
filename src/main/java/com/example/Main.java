@@ -404,17 +404,16 @@ class BinanceService implements ApplicationRunner {
         this.tickerMap = DataService.futures.get(exchange) ;
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 200)
     public void bookTicker() throws Exception{
-        HttpResponse<String> response = client.send(
+        String json = client.send(
                             HttpRequest.newBuilder()
                                        .uri(URI.create("https://fapi.binance.com/fapi/v1/ticker/bookTicker"))
                                        .GET()
                                        .header("User-Agent", "Mozilla/5.0")
                                        .build(),
                             HttpResponse.BodyHandlers.ofString()
-                      );
-        String json = response.body() ;              
+                      ).body();
         for( JSONObject x : JSON.parseArray(json, JSONObject.class)){
             String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
             if(!tickerMap.containsKey(baseCoin))
@@ -425,7 +424,6 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.askPce, x.getBigDecimal("askPrice")) ;
             map.put(Ticker.askSz, x.getBigDecimal("askQty")) ;
         }
-        // log.info(response.headers().toString());              
     }
 
     @Scheduled(fixedRate = 4*60*1000)
@@ -471,7 +469,7 @@ class BinanceService implements ApplicationRunner {
         // log.info(response.headers().toString());                   
     }
 
-    @Scheduled(fixedRate = 7*1000)
+    @Scheduled(fixedRate = 3*1000)
     public void last() throws Exception{
         HttpResponse<String> response = client.send(
                             HttpRequest.newBuilder()
