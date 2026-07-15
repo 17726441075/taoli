@@ -7,10 +7,13 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -89,6 +92,7 @@ class Taoli{
 public class Main {  
     public static void main(String[] args) { SpringApplication.run(Main.class, args); } 
 }
+@Order(-1)
 @Configuration
 class AllConfig {
 
@@ -108,7 +112,7 @@ class AllConfig {
                 .followRedirects(HttpClient.Redirect.NORMAL) 
                 .build();
     }
-    
+
 }
 @Slf4j
 @Service
