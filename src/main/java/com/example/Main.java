@@ -206,7 +206,6 @@ class DataService implements ApplicationRunner{
         for(JSONObject x : JSONObject.parseObject(json).getJSONObject("result").getJSONArray("list").toJavaList(JSONObject.class) ){
             String symbol = x.getString("symbol");
             if(  !x.getString("contractType").equals("LinearPerpetual")
-                    || !x.getString("settleCoin").equals("USDT")
                     || !x.getString("status").equals("Trading") )
                     continue ;
             Exchange exchange = Exchange.bybit ;
