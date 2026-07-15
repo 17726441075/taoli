@@ -255,16 +255,12 @@ class DataService implements ApplicationRunner{
                 continue ;
             Exchange exchange = Exchange.gate ;
             Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
-            // for(var ticker:Ticker.values())
-            //     map.put(ticker, null) ;
+            for(var ticker:Ticker.values())
+                map.put(ticker, null) ;
             futures.get(exchange).put(Util.exchangeCoinToBase(exchange, name), map) ;
-            // map.put(Ticker.lotSz,   x.getBigDecimal("quantityMultiplier")) ;
-            // map.put(Ticker.minSz,  x.getBigDecimal("minOrderQty")) ;
-            // map.put(Ticker.mutil,  null) ;      
-            // protyMap[ge].put(name, new BigDecimal[]{
-            //                                             BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier")),
-            //                                             BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier")),
-            //                                             x.getBigDecimal("quanto_multiplier")}) ;      
+            map.put(Ticker.lotSz,  BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier"))) ;
+            map.put(Ticker.minSz,  BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier"))) ;
+            map.put(Ticker.mutil,  x.getBigDecimal("quanto_multiplier")) ;      
         }            
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
