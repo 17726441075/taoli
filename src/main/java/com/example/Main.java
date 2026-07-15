@@ -190,11 +190,10 @@ class DataService implements ApplicationRunner{
             Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
             for(var ticker:Ticker.values())
                 map.put(ticker, null) ;
-            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, symbol), map) ;            
-            // protyMap[ba].put(symbol, new BigDecimal[]{
-            //                                             x.getJSONArray("filters").getJSONObject(2).getBigDecimal("stepSize"),
-            //                                             x.getJSONArray("filters").getJSONObject(2).getBigDecimal("minQty"),
-            //                                             null}) ;               
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, symbol), map) ;
+            map.put(Ticker.lotSz,  x.getJSONArray("filters").getJSONObject(2).getBigDecimal("stepSize")) ;
+            map.put(Ticker.minSz,  x.getJSONArray("filters").getJSONObject(2).getBigDecimal("minQty")) ;
+            map.put(Ticker.mutil,  null) ;
         }
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
