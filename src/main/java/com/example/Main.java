@@ -294,9 +294,9 @@ class OkxService implements ApplicationRunner {
                       ).body(); 
         for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
             String instId =  x.getString("instId") , baseCoin = Util.exchangeCoinToBase(exchange, instId);
-            // if( !tickerMap.containsKey(baseCoin) ) 
-                // continue ;
-            // log.info(x.toJSONString());
+            if( !tickerMap.containsKey(baseCoin) ) 
+                continue ;
+            log.info(x.toJSONString());
         }              
         return ;
     }
