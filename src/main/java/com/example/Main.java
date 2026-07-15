@@ -268,14 +268,15 @@ class DataService implements ApplicationRunner{
     }
 
 }
+@Order(1)
 @Slf4j
 @Service
-class Test {
+class OkxService {
 
     @Resource
     private DataService dataService ;
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 200)
     public void test(){
         log.info("tets");
         return ;
