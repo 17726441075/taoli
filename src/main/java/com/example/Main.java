@@ -168,14 +168,11 @@ class DataService implements ApplicationRunner{
             for(var ticker:Ticker.values())
                 map.put(ticker, null) ;
             futures.get(exchange).put(Util.exchangeCoinToBase(exchange, instId), map) ; 
-            
-            
-            // protyMap[ok].put(instId, new BigDecimal[]{
-            //                                             x.getBigDecimal("lotSz").multiply(x.getBigDecimal("ctVal")),
-            //                                             x.getBigDecimal("minSz").multiply(x.getBigDecimal("ctVal")),
-            //                                             x.getBigDecimal("ctVal"),
-            //                                             x.getBigDecimal("instIdCode")}) ; 
-        }              
+            map.put(Ticker.lotSz,  x.getBigDecimal("lotSz").multiply(x.getBigDecimal("ctVal"))) ;
+            map.put(Ticker.minSz,  x.getBigDecimal("minSz").multiply(x.getBigDecimal("ctVal"))) ;
+            map.put(Ticker.mutil,  x.getBigDecimal("ctVal")) ;
+        }
+        log.info(futures.get(Exchange.okx).toString());              
     }
 
 }
@@ -189,10 +186,6 @@ class Test {
     @Scheduled(fixedRate = 2000)
     public void test(){
         log.info("tets");
-        dataService.getFutures()
-                   .forEach((k,map)->{
-                        log.info("{} {}",k,map);
-                    });
         return ;
     }
     
