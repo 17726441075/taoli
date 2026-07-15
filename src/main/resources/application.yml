@@ -3,7 +3,7 @@ server:
 spring:
   data:
     redis:
-      host: localhost
+      host: 47.91.31.90
       port: 6379
       password: Daisilong123.
       database: 0
