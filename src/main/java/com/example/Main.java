@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 
 import jakarta.annotation.Resource;
@@ -47,26 +48,20 @@ enum Exchange {
     hyper  
 }
 enum Ticker {
-    coin,    
-    longExchange,shortExchange,   
-    openCha,closeCha,
-    longCha,shortCha,
-    allFee,
-    longFee,shortFee,
-    longRate,ShortRate,
-    longMaxFee,shortMaxFee,
-    longIndexCha,shortIndexCha,
-    longTurnover,shortTurnover,
-    longLast,shortLast,
-    longLot,shortLot,
-    longMinSz,shortMinSz,
-    longMutil,shortMutil,
-    longIndex,shortIndex,
-    longMark,shortMark,
-    longAskPce,shortAskPce,
-    longBidPce,shortBidPce,
-    longAskSz,shortAskSz,
-    longBidSz,shortBidSz
+    askPce,
+    bidPce,
+    askSz,
+    bidSz,
+    fee,
+    RateFee,
+    maxFee,
+    lastPcE,
+    turnover,
+    indexPce,
+    markPce,
+    lotSz,
+    minSz,
+    mutil,
 }
 class Util {
     
@@ -157,7 +152,30 @@ class DataService implements ApplicationRunner{
                                        .build(),
                             HttpResponse.BodyHandlers.ofString()
                       ).body(); 
-        log.info(json);              
+        for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
+            String instId =  x.getString("instId")  ;
+            if(   !x.getString("ctType").equals("linear") 
+                    || !x.getString("settleCcy").equals("USDT")
+                    || !x.getString("ruleType").equals("normal") 
+                    || !x.getString("state").equals("live") )
+                        continue;
+            if(instId.equals("BB-USDT-SWAP")||
+                instId.equals("OPENAI-USDT-SWAP")||
+                instId.equals("ANTHROPIC-USDT-SWAP")) 
+                continue ;
+            Exchange exchange = Exchange.okx ;
+            Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+            for(var ticker:Ticker.values())
+                map.put(ticker, null) ;
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, instId), map) ; 
+            
+            
+            // protyMap[ok].put(instId, new BigDecimal[]{
+            //                                             x.getBigDecimal("lotSz").multiply(x.getBigDecimal("ctVal")),
+            //                                             x.getBigDecimal("minSz").multiply(x.getBigDecimal("ctVal")),
+            //                                             x.getBigDecimal("ctVal"),
+            //                                             x.getBigDecimal("instIdCode")}) ; 
+        }              
     }
 
 }
