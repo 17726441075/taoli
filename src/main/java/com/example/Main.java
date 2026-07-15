@@ -155,7 +155,6 @@ class DataService implements ApplicationRunner{
         for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
             String instId =  x.getString("instId")  ;
             if(   !x.getString("ctType").equals("linear") 
-                    || !x.getString("ruleType").equals("normal") 
                     || !x.getString("state").equals("live") )
                         continue;
             if(instId.equals("BB-USDT-SWAP")||
