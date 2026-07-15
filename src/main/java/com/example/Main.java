@@ -426,7 +426,7 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.askSz, x.getBigDecimal("askQty")) ;
         }
 
-        log.info(response.headers().toString());              
+        // log.info(response.headers().toString());              
     }
 
     @Scheduled(fixedRate = 4*60*1000)
@@ -446,9 +446,30 @@ class BinanceService implements ApplicationRunner {
             Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
             map.put(Ticker.maxFee, x.getBigDecimal("adjustedFundingRateCap")) ;
             map.put(Ticker.rateFee, x.getBigDecimal("fundingIntervalHours")) ;
-            log.info(x.toString());
-            log.info(map.toString());
         }
+    }
+    
+    @Scheduled(fixedRate = 7*1000)
+    public void premiumIndex() throws Exception{
+        HttpResponse<String> response = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://fapi.binance.com/fapi/v1/premiumIndex"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ); 
+        String json = response.body() ;
+        for( JSONObject x : JSON.parseArray(json, JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.markPce, x.getBigDecimal("markPrice")) ;
+            map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
+            map.put(Ticker.fee, x.getBigDecimal("lastFundingRate").multiply(BigDecimal.valueOf(100))) ;
+        }
+        log.info(response.headers().toString());                   
     }
     
 }
