@@ -195,10 +195,34 @@ class DataService implements ApplicationRunner{
             map.put(Ticker.minSz,  x.getJSONArray("filters").getJSONObject(2).getBigDecimal("minQty")) ;
             map.put(Ticker.mutil,  null) ;
         }
+        json = client.send(
+                        HttpRequest.newBuilder()
+                                   .uri(URI.create("https://api.bybit.com/v5/market/instruments-info?category=linear&status=Trading"))
+                                   .GET()
+                                   .header("User-Agent", "Mozilla/5.0")
+                                   .build(),
+                        HttpResponse.BodyHandlers.ofString()
+                ).body(); 
+        for(JSONObject x : JSONObject.parseObject(json).getJSONObject("result").getJSONArray("list").toJavaList(JSONObject.class) ){
+            String symbol = x.getString("symbol");
+            if(  !x.getString("contractType").equals("LinearPerpetual")
+                    || !x.getString("settleCoin").equals("USDT")
+                    || !x.getString("status").equals("Trading") )
+                    continue ;
+            Exchange exchange = Exchange.bybit ;
+            Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+            // for(var ticker:Ticker.values())
+            //     map.put(ticker, null) ;
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, symbol), map) ;        
+            // protyMap[bb].put(symbol, new BigDecimal[]{
+            //                                             x.getJSONObject("lotSizeFilter").getBigDecimal("qtyStep"),
+            //                                             x.getJSONObject("lotSizeFilter").getBigDecimal("minOrderQty"),
+            //                                             null}) ;                 
+        }         
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
         });
-        log.info(futures.get(Exchange.binance).toString());              
+        log.info(futures.get(Exchange.bybit).toString());              
     }
 
 }
