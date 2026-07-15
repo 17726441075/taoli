@@ -425,7 +425,6 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.askPce, x.getBigDecimal("askPrice")) ;
             map.put(Ticker.askSz, x.getBigDecimal("askQty")) ;
         }
-
         // log.info(response.headers().toString());              
     }
 
@@ -444,7 +443,7 @@ class BinanceService implements ApplicationRunner {
             if(!tickerMap.containsKey(baseCoin))
                 continue ;
             Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
-            map.put(Ticker.maxFee, x.getBigDecimal("adjustedFundingRateCap")) ;
+            map.put(Ticker.maxFee, x.getBigDecimal("adjustedFundingRateCap").multiply(BigDecimal.valueOf(100))) ;
             map.put(Ticker.rateFee, x.getBigDecimal("fundingIntervalHours")) ;
         }
     }
