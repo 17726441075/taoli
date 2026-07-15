@@ -331,4 +331,24 @@ class OkxService implements ApplicationRunner {
         } 
     }
     
+    @Scheduled(fixedRate = 7000)
+    public void mark() throws Exception{
+        String json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://openapi.okx.com/api/v5/public/mark-price?instType=SWAP"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body(); 
+
+        for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
+            String instId =  x.getString("instId") , baseCoin = Util.exchangeCoinToBase(exchange, instId);
+            if( !tickerMap.containsKey(baseCoin) ) 
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.markPce,x.getBigDecimal("markPx"));
+        } 
+    }
+
 }
