@@ -64,7 +64,7 @@ enum Ticker {
     longBidSz,shortBidSz
 }
 @Data
-class Taoli{
+class Taoli {
     private String coin,longExchange,shortExchange;
     private BigDecimal openCha,closeCha;
     private BigDecimal longCha,shortCha;
