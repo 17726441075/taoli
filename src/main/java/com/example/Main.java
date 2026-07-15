@@ -28,6 +28,10 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
+
 import jakarta.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -604,6 +608,7 @@ class BitgetService implements ApplicationRunner {
 @Slf4j
 @Service
 class GateService implements ApplicationRunner {
+    private static final EventLoopGroup io = new MultiThreadIoEventLoopGroup(1,  EpollIoHandler.newFactory());
     private static final Exchange exchange = Exchange.gate ;
 
     @Resource
