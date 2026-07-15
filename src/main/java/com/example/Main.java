@@ -120,7 +120,7 @@ class AllConfig {
 class DataService implements ApplicationRunner{
 
     @JSONField(serialize = false)
-    private EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
+    private final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
