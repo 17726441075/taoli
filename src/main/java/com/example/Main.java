@@ -86,17 +86,14 @@ class Taoli{
 public class Main {  
     public static void main(String[] args) { SpringApplication.run(Main.class, args); } 
 }
-
 @Configuration
 class SchedulerConfig {
 
     @Bean
     public ThreadPoolTaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(10);
+        scheduler.setPoolSize(16);
         scheduler.setThreadNamePrefix("TaoLi.");
-        scheduler.setAwaitTerminationSeconds(60);
-        scheduler.setWaitForTasksToCompleteOnShutdown(true);
         return scheduler;
     }
 
