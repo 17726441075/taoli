@@ -79,6 +79,18 @@ class Util {
         };
     }
 
+    public static final String baseToExchange(Exchange exchange,String coin){
+        return switch (exchange) {
+            case okx -> coin+"-USDT-SWAP" ;
+            case binance -> coin+"USDT" ;
+            case bybit -> coin+"USDT" ;
+            case bitget -> coin+"USDT"  ;
+            case gate -> coin+"_USDT";
+            case hyper -> coin.substring(0,coin.length()-4) ;
+            default -> null ;
+        };
+    }
+
 }
 @Data
 class Taoli {
@@ -349,6 +361,26 @@ class OkxService implements ApplicationRunner {
             Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
             map.put(Ticker.markPce,x.getBigDecimal("markPx"));
         } 
+    }
+
+    @Scheduled(fixedRate = 1000*60)
+    public void funding() throws Exception{
+
+        for(String baseCoin : tickerMap.keySet()){
+            Thread.sleep(250);
+            String json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://openapi.okx.com/api/v5/public/funding-rate?instId="+Util.baseToExchange(exchange, baseCoin)))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body(); 
+            log.info(json);          
+
+
+
+        }
     }
 
 }
