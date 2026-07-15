@@ -1,6 +1,6 @@
 com\example\Test.class
-com\example\DATA.class
 com\example\Main.class
 com\example\SchedulerConfig.class
 com\example\Exchange.class
+com\example\Taoli.class
 com\example\Ticker.class

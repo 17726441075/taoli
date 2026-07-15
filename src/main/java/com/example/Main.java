@@ -27,12 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  * scp -i D:\pzl\pzl.pem root@8.211.150.14:~/cook.log  .\
  */
 
-
-@EnableScheduling
-@SpringBootApplication
-public class Main {  
-    public static void main(String[] args) { SpringApplication.run(Main.class, args); } 
-}
 enum Exchange {
     okx,    
     binance,   
@@ -64,7 +58,7 @@ enum Ticker {
     longBidSz,shortBidSz
 }
 @Data
-class DATA{
+class Taoli{
     private String coin,longExchange,shortExchange;
     private BigDecimal openCha,closeCha;
     private BigDecimal longCha,shortCha;
@@ -87,6 +81,12 @@ class DATA{
     @JSONField(serialize = false)
     private static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> val = new EnumMap<>(Exchange.class) ;
 }
+@EnableScheduling
+@SpringBootApplication
+public class Main {  
+    public static void main(String[] args) { SpringApplication.run(Main.class, args); } 
+}
+
 @Configuration
 class SchedulerConfig {
 
