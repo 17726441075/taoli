@@ -812,6 +812,7 @@ class TaoliService {
                             String coin = enA.getKey() ;
                             Map<Ticker,BigDecimal> longTicker = enA.getValue() , shortTicker = b.getValue().get(coin) ;
                             Taoli x = Taoli.builder()
+                                           .coin(coin)
                                            .longFee(longTicker.get(Ticker.fee))
                                            .shortFee(shortTicker.get(Ticker.fee))
                                            .longRate(longTicker.get(Ticker.rateFee))
