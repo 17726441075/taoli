@@ -640,6 +640,12 @@ class GateService implements ApplicationRunner {
 
     private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
     
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+        connectToGate() ;
+    }
+
     private final void connectToGate() throws Exception {
         URI uri = URI.create("wss://fx-ws.gateio.ws/v4/ws/usdt") ;
         String inetHost = uri.getHost() ;
@@ -731,12 +737,6 @@ class GateService implements ApplicationRunner {
             )
             .connect()
             .sync() ;
-    }
-
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        this.tickerMap = DataService.futures.get(exchange) ;
-        connectToGate() ;
     }
 
     @Scheduled(fixedRate = 200)
