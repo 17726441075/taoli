@@ -79,7 +79,6 @@ class Util {
         };
     }
 
-
 }
 @Data
 class Taoli {
@@ -145,6 +144,7 @@ class DataService implements ApplicationRunner{
     public void run(ApplicationArguments args) throws Exception {
         for(var x:Exchange.values())
             futures.put(x, new HashMap<>()) ;
+        log.info(futures.toString());
 
     }
 
