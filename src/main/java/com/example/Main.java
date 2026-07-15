@@ -79,7 +79,7 @@ class Taoli{
     private BigDecimal longAskSz,shortAskSz;
     private BigDecimal longBidSz,shortBidSz;
     @JSONField(serialize = false)
-    private static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> val = new EnumMap<>(Exchange.class) ;
+    public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 }
 @EnableScheduling
 @SpringBootApplication
