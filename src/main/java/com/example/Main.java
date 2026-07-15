@@ -112,11 +112,15 @@ class AllConfig {
     }
 
 }
+@Order(0)
 @Slf4j
 @Service
-class DataService{
+class DataService {
+
     @JSONField(serialize = false)
     public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
+
+
 }
 @Slf4j
 @Service
