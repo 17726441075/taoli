@@ -270,19 +270,16 @@ class DataService implements InitializingBean{
 @Slf4j
 @Service
 class OkxService implements ApplicationRunner {
-    private final Exchange exchange = Exchange.okx ;
+    private static final Exchange exchange = Exchange.okx ;
 
     @Resource
     private HttpClient client ;
-
-    @Resource
-    private DataService dataService ;
 
     private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
     
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        this.tickerMap = dataService.futures.get(exchange) ;
+        this.tickerMap = DataService.futures.get(exchange) ;
     }
 
     @Scheduled(fixedRate = 200)
