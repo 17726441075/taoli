@@ -5,9 +5,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -28,10 +31,28 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.epoll.EpollIoHandler;
-
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig;
+import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolHandler;
+import io.netty.handler.codec.http.websocketx.WebSocketVersion;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.ReferenceCountUtil;
 import jakarta.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -614,24 +635,121 @@ class GateService implements ApplicationRunner {
     @Resource
     private HttpClient client ;
 
+    @Resource
+    private ThreadPoolTaskScheduler taskScheduler ;
+
     private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
     
+    private final void connectToGate() throws Exception {
+        URI uri = URI.create("wss://fx-ws.gateio.ws/v4/ws/usdt") ;
+        String inetHost = uri.getHost() ;
+        int port = uri.getPort() <= 0 ? ("wss".equals(uri.getScheme()) ? 443 : 80) : uri.getPort() ;
+        SslContext ssl = SslContextBuilder.forClient().build();
+        new Bootstrap()
+            .group(io) 
+            .channel(EpollSocketChannel.class) 
+            .remoteAddress(inetHost, port) 
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15 * 1000) 
+            .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel ch) {
+                                if("wss".equals(uri.getScheme()))
+                                    ch.pipeline().addLast(ssl.newHandler(ch.alloc(),inetHost ,port)) ;
+                                ch.pipeline()
+                                    .addLast(new HttpClientCodec())
+                                    .addLast(new HttpObjectAggregator(65536))
+                                    .addLast(new WebSocketClientProtocolHandler( 
+                                            WebSocketClientProtocolConfig.newBuilder()
+                                                                        .webSocketUri(uri)                                
+                                                                        .version(WebSocketVersion.V13)
+                                                                        .maxFramePayloadLength(1024*1024*10)                        
+                                                                        .handshakeTimeoutMillis(15 * 1000) 
+                                                                        .build()
+                                    ))
+                                    .addLast(new IdleStateHandler(10, 5, 0))
+                                    .addLast(new ChannelDuplexHandler() {
+                                                @Override
+                                                public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+                                                    if (evt instanceof IdleStateEvent e ) {
+                                                        if (e.state() == IdleState.WRITER_IDLE)
+                                                            ctx.writeAndFlush(new TextWebSocketFrame(String.format(
+                                                                """
+                                                                    {
+                                                                    "time": %s,
+                                                                    "channel":"futures.ping"
+                                                                    }
+                                                                """, System.currentTimeMillis()/1000) )) ;
+                                                        if(e.state() == IdleState.READER_IDLE){
+                                                            log.error("{}readTimeOut",exchange);
+                                                            ctx.close() ;
+                                                        }
+                                                    }
+                                                    if (evt == WebSocketClientProtocolHandler.ClientHandshakeStateEvent.HANDSHAKE_COMPLETE){
+                                                        List<List<String>> buketList = List.of(new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>());
+                                                        int ind = 0 ;
+                                                        for(String x:tickerMap.keySet()){
+                                                            buketList.get(ind).add(x+"_USDT") ;
+                                                            ind = ++ind%buketList.size() ;
+                                                        }
+                                                        for(List<String> payload : buketList){
+                                                            String subStr2 = JSON.toJSONString(Map.of("time",System.currentTimeMillis()/1000,"channel","futures.book_ticker","event","subscribe","payload",payload)) ;
+                                                            ctx.writeAndFlush(new TextWebSocketFrame(subStr2)) ;
+                                                            log.info("{}",payload.size());
+                                                            log.info("bytes: {}",subStr2.getBytes(StandardCharsets.UTF_8).length);
+                                                        }
+                                                    }
+                                                }
+                                                @Override
+                                                public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                                    if(msg instanceof TextWebSocketFrame twsf){
+                                                        String text = twsf.text() ;
+                                                        taskScheduler.execute(()->{
+                                                            log.info(text);
+                                                                // long toNow = System.currentTimeMillis() ;  
+                                                                // JSONObject jobj = JSON.parseObject(text) ;
+                                                                // String channel = jobj.getString("channel") ;
+                                                                // if(channel.startsWith("futures.pong")) return ;
+                                                                // if( !jobj.containsKey("event") || !"update".equals(jobj.getString("event"))){
+                                                                //     log.info("{}info: {}",ee,text);
+                                                                //     return ;
+                                                                // }
+                                                                // if(channel.endsWith("book_ticker")){
+                                                                //     JSONObject result = jobj.getJSONObject("result") ;
+                                                                //     ab(ge, result.getString("s"), result.getBigDecimal("a"), result.getBigDecimal("A"), result.getBigDecimal("b"), result.getBigDecimal("B"), result.getLongValue("t"), toNow);
+                                                                // }
+                                                                // else if(channel.endsWith("tickers")) {
+                                                                //     JSONObject result = jobj.getJSONArray("result").getJSONObject(0) ;
+                                                                //     String contract = result.getString("contract") ;
+                                                                //     fe(ge, contract, result.getBigDecimal("funding_rate"));
+                                                                //     sd(ge, contract, result.getBigDecimal("index_price"), result.getBigDecimal("mark_price"));
+                                                                //     lv(ge, contract, result.getBigDecimal("last"), result.getBigDecimal("volume_24h_settle"));
+                                                                // }
+                                                        });
+                                                    }
+                                                    ReferenceCountUtil.release(msg);
+                                                }
+                                                @Override
+                                                public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                                    Thread.sleep(1000) ;
+                                                    connectToGate();
+                                                }
+                                    });
+                        }         
+                    }
+            )
+            .connect()
+            .sync() ;
+    }
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.tickerMap = DataService.futures.get(exchange) ;
+        connectToGate() ;
     }
 
     @Scheduled(fixedRate = 200)
     public void order_book() throws Exception{
-        String json = client.send(
-                  HttpRequest.newBuilder()
-                             .uri(URI.create("https://api.gateio.ws/api/v4/futures/usdt/order_book"))
-                             .GET()
-                             .header("User-Agent", "Mozilla/5.0")
-                             .build(),
-                  HttpResponse.BodyHandlers.ofString()
-                ).body();
+        
     }
-
     
 }
