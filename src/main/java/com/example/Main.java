@@ -694,7 +694,6 @@ class GateService implements ApplicationRunner {
                                                         for(List<String> payload : buketList){
                                                             String subStr2 = JSON.toJSONString(Map.of("time",System.currentTimeMillis()/1000,"channel","futures.book_ticker","event","subscribe","payload",payload)) ;
                                                             ctx.writeAndFlush(new TextWebSocketFrame(subStr2)) ;
-                                                            log.info("{}",payload.size());
                                                             log.info("bytes: {}",subStr2.getBytes(StandardCharsets.UTF_8).length);
                                                         }
                                                     }
@@ -704,26 +703,19 @@ class GateService implements ApplicationRunner {
                                                     if(msg instanceof TextWebSocketFrame twsf){
                                                         String text = twsf.text() ;
                                                         taskScheduler.execute(()->{
-                                                            log.info(text);
-                                                                // long toNow = System.currentTimeMillis() ;  
-                                                                // JSONObject jobj = JSON.parseObject(text) ;
-                                                                // String channel = jobj.getString("channel") ;
-                                                                // if(channel.startsWith("futures.pong")) return ;
-                                                                // if( !jobj.containsKey("event") || !"update".equals(jobj.getString("event"))){
-                                                                //     log.info("{}info: {}",ee,text);
-                                                                //     return ;
-                                                                // }
-                                                                // if(channel.endsWith("book_ticker")){
-                                                                //     JSONObject result = jobj.getJSONObject("result") ;
-                                                                //     ab(ge, result.getString("s"), result.getBigDecimal("a"), result.getBigDecimal("A"), result.getBigDecimal("b"), result.getBigDecimal("B"), result.getLongValue("t"), toNow);
-                                                                // }
-                                                                // else if(channel.endsWith("tickers")) {
-                                                                //     JSONObject result = jobj.getJSONArray("result").getJSONObject(0) ;
-                                                                //     String contract = result.getString("contract") ;
-                                                                //     fe(ge, contract, result.getBigDecimal("funding_rate"));
-                                                                //     sd(ge, contract, result.getBigDecimal("index_price"), result.getBigDecimal("mark_price"));
-                                                                //     lv(ge, contract, result.getBigDecimal("last"), result.getBigDecimal("volume_24h_settle"));
-                                                                // }
+                                                            JSONObject jobj = JSON.parseObject(text) ;
+                                                            String channel = jobj.getString("channel") ;
+                                                            if(channel.startsWith("futures.pong") || !jobj.containsKey("event") || !"update".equals(jobj.getString("event"))) {
+                                                                log.info("{} {}",exchange,text);
+                                                                return ;
+                                                            }
+                                                            JSONObject result = jobj.getJSONObject("result") ;
+                                                            String baseCoin = Util.exchangeCoinToBase(exchange, result.getString("s")) ;
+                                                            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+                                                            map.put(Ticker.askPce, result.getBigDecimal("a")) ;
+                                                            map.put(Ticker.askSz, result.getBigDecimal("A")) ;
+                                                            map.put(Ticker.bidPce, result.getBigDecimal("b")) ;
+                                                            map.put(Ticker.bidSz, result.getBigDecimal("B")) ;
                                                         });
                                                     }
                                                     ReferenceCountUtil.release(msg);
