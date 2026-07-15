@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 
+import jakarta.annotation.Resource;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 /**
@@ -130,9 +131,16 @@ class DataService implements ApplicationRunner{
 @Service
 class Test {
 
-    @Scheduled(fixedRate = 100)
+    @Resource
+    private DataService dataService ;
+
+    @Scheduled(fixedRate = 2000)
     public void test(){
         log.info("tets");
+        dataService.getFutures()
+                   .forEach((k,map)->{
+                        log.info("{} {}",k,map);
+                    });
         return ;
     }
     
