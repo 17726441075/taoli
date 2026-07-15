@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationArguments;
@@ -153,6 +154,9 @@ class AllConfig {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(16);
         scheduler.setThreadNamePrefix("TaoLi.");
+        scheduler.setWaitForTasksToCompleteOnShutdown(false); 
+        scheduler.setAwaitTerminationSeconds(0);           
+        scheduler.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         return scheduler;
     }
 
@@ -781,4 +785,5 @@ class GateService implements ApplicationRunner {
             map.put(Ticker.turnover, x.getBigDecimal("volume_24h").multiply(map.get(Ticker.mutil)).multiply(map.get(Ticker.lastPcE))) ;
         }              
     }
+    
 }
