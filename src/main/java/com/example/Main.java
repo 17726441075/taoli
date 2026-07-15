@@ -468,6 +468,28 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
             map.put(Ticker.fee, x.getBigDecimal("lastFundingRate").multiply(BigDecimal.valueOf(100))) ;
         }
+        // log.info(response.headers().toString());                   
+    }
+
+    @Scheduled(fixedRate = 7*1000)
+    public void last() throws Exception{
+        HttpResponse<String> response = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://fapi.binance.com/fapi/v1/ticker/24hr"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ); 
+        String json = response.body() ;
+        for( JSONObject x : JSON.parseArray(json, JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.turnover, x.getBigDecimal("quoteVolume")) ;
+            map.put(Ticker.lastPcE, x.getBigDecimal("lastPrice")) ;
+        }
         log.info(response.headers().toString());                   
     }
     
