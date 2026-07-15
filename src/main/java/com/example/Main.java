@@ -845,26 +845,26 @@ class TaoliService {
                             if(x.getShortBidPce()!=null&&x.getLongAskPce()!=null)               
                                 x.setOpenCha( 
                                             x.getShortBidPce().subtract(x.getLongAskPce())
-                                                            .multiply(BigDecimal.valueOf(200))
-                                                            .divide(x.getShortBidPce().add(x.getLongAskPce()),7,RoundingMode.DOWN)
+                                                            .multiply(BigDecimal.valueOf(100))
+                                                            .divide(x.getShortBidPce().add(x.getLongAskPce().divide(BigDecimal.TWO,7,RoundingMode.DOWN)),7,RoundingMode.DOWN)
                                                             );
                             if(x.getShortAskPce()!=null&&x.getLongBidPce()!=null)                                   
                                 x.setCloseCha( 
                                             x.getShortAskPce().subtract(x.getLongBidPce())
-                                                            .multiply(BigDecimal.valueOf(200))
-                                                            .divide(x.getShortAskPce().add(x.getLongBidPce()),7,RoundingMode.DOWN)
+                                                            .multiply(BigDecimal.valueOf(100))
+                                                            .divide(x.getShortAskPce().add(x.getLongBidPce().divide(BigDecimal.TWO,7,RoundingMode.DOWN)),7,RoundingMode.DOWN)
                                                             );
                             if(x.getLongAskPce()!=null&&x.getLongBidPce()!=null)                                                 
                                 x.setLongCha(
                                             x.getLongAskPce().subtract(x.getLongBidPce())
-                                                            .multiply(BigDecimal.valueOf(200))
-                                                            .divide(x.getLongAskPce().add(x.getLongBidPce()),7,RoundingMode.DOWN)
+                                                            .multiply(BigDecimal.valueOf(100))
+                                                            .divide(x.getLongAskPce().add(x.getLongBidPce().divide(BigDecimal.TWO,7,RoundingMode.DOWN)),7,RoundingMode.DOWN)
                                                             ); 
                             if(x.getShortBidPce()!=null&&x.getShortBidPce()!=null)                                 
                                 x.setShortCha(
                                             x.getShortAskPce().subtract(x.getShortBidPce())
-                                                            .multiply(BigDecimal.valueOf(200))
-                                                            .divide(x.getShortAskPce().add(x.getShortBidPce()),7,RoundingMode.DOWN)
+                                                            .multiply(BigDecimal.valueOf(100))
+                                                            .divide(x.getShortAskPce().add(x.getShortBidPce().divide(BigDecimal.TWO,7,RoundingMode.DOWN)),7,RoundingMode.DOWN)
                                                             );
                             if(x.getShortFee()!=null&&x.getLongFee()!=null)                                
                                 x.setAllFee(x.getShortFee().subtract(x.getLongFee()).setScale(3,RoundingMode.DOWN));
