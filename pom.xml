@@ -61,7 +61,7 @@
                               <argument>-i</argument>
                               <argument>D:\pzl\pzl.pem</argument>
                               <argument>${project.build.directory}/${project.build.finalName}.jar</argument>
-                              <argument>root@47.91.31.90:~</argument>
+                              <argument>root@8.211.150.14:~</argument>
                           </arguments>
                       </configuration>
                   </execution>
@@ -76,7 +76,7 @@
                           <arguments>
                               <argument>-i</argument>
                               <argument>D:\pzl\pzl.pem</argument>
-                              <argument>root@47.91.31.90</argument>
+                              <argument>root@8.211.150.14</argument>
                               <argument>systemctl restart taoli</argument>
                           </arguments>
                       </configuration>

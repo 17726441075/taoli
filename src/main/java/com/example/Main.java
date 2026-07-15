@@ -17,14 +17,28 @@ import com.alibaba.fastjson2.annotation.JSONField;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-/***
+/**
+ * Hello world!
+ *  
+ * ssh -i D:\pzl\pzl.pem root@8.211.150.14
  * 
- * ssh -i D:\pzl\pzl.pem root@47.91.31.90
+ * scp -i D:\pzl\pzl.pem .\target\cook-1.0.jar root@8.211.150.14:~
  * 
- * scp -i D:\pzl\pzl.pem root@47.91.31.90:~/taoli.log  .\ 
- * 
- * scp -i D:\pzl\pzl.pem .\target\taoli-1.0.jar root@47.91.31.90:~
- * **/
+ * scp -i D:\pzl\pzl.pem root@8.211.150.14:~/cook.log  .\
+ */
+// [Unit]
+// After=network.target
+
+// [Service]
+// WorkingDirectory=/root
+// ExecStart=/root/app/jdk-25.0.3/bin/java -XX:+UseZGC -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.BasicAsyncLoggerContextSelector -Dlog4j2.asyncLoggerRingBufferSize=262144 -jar /root/taoli-1.0.jar
+// StandardOutput=journal
+// StandardError=journal
+// Restart=always
+// RestartSec=1
+
+// [Install]
+// WantedBy=multi-user.target
 
 @EnableScheduling
 @SpringBootApplication
