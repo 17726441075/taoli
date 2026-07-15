@@ -799,7 +799,7 @@ class TaoliService {
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 20*1000)
     public void tickers() throws Exception{
         // long st = System.currentTimeMillis() ;
         final List<Taoli> list = new LinkedList<>() ;
