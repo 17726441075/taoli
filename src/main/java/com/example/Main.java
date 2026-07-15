@@ -1,7 +1,10 @@
 package com.example;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -146,6 +149,15 @@ class DataService implements ApplicationRunner{
             futures.put(x, new HashMap<>()) ;
         log.info(futures.toString());
 
+        String json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://openapi.okx.com/api/v5/public/instruments?instType=SWAP"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body(); 
+        log.info(json);              
     }
 
 }
