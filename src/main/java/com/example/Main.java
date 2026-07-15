@@ -600,3 +600,33 @@ class BitgetService implements ApplicationRunner {
     }
     
 }
+@Order(5)
+@Slf4j
+@Service
+class GateService implements ApplicationRunner {
+    private static final Exchange exchange = Exchange.gate ;
+
+    @Resource
+    private HttpClient client ;
+
+    private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+    
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+    }
+
+    @Scheduled(fixedRate = 200)
+    public void order_book() throws Exception{
+        String json = client.send(
+                  HttpRequest.newBuilder()
+                             .uri(URI.create("https://api.gateio.ws/api/v4/futures/usdt/order_book"))
+                             .GET()
+                             .header("User-Agent", "Mozilla/5.0")
+                             .build(),
+                  HttpResponse.BodyHandlers.ofString()
+                ).body();
+    }
+
+    
+}
