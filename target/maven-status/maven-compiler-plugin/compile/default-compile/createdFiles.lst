@@ -1,6 +1,7 @@
 com\example\Test.class
 com\example\AllConfig.class
 com\example\Main.class
+com\example\DataService.class
 com\example\Exchange.class
 com\example\Taoli.class
 com\example\Ticker.class

@@ -84,8 +84,6 @@ class Taoli{
     private BigDecimal longBidPce,shortBidPce;
     private BigDecimal longAskSz,shortAskSz;
     private BigDecimal longBidSz,shortBidSz;
-    @JSONField(serialize = false)
-    public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 }
 @EnableScheduling
 @SpringBootApplication
@@ -113,6 +111,12 @@ class AllConfig {
                 .build();
     }
 
+}
+@Slf4j
+@Service
+class DataService{
+    @JSONField(serialize = false)
+    public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 }
 @Slf4j
 @Service
