@@ -90,7 +90,7 @@ public class Main {
 class AllConfig {
 
     @Bean
-    public ThreadPoolTaskScheduler taskScheduler() {
+    public ThreadPoolTaskScheduler schedulers() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(16);
         scheduler.setThreadNamePrefix("TaoLi.");
