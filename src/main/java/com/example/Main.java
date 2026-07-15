@@ -525,13 +525,13 @@ class BybitService implements ApplicationRunner {
             map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
             map.put(Ticker.markPce, x.getBigDecimal("markPrice")) ;
             map.put(Ticker.turnover, x.getBigDecimal("turnover24h")) ;
-            map.put(Ticker.fee, x.getBigDecimal("fundingRate")) ;
+            map.put(Ticker.fee, x.getBigDecimal("fundingRate").multiply(BigDecimal.valueOf(100))) ;
             map.put(Ticker.askPce, x.getBigDecimal("ask1Price")) ;
             map.put(Ticker.askSz, x.getBigDecimal("ask1Size")) ;
             map.put(Ticker.bidPce, x.getBigDecimal("bid1Price")) ;
             map.put(Ticker.bidSz, x.getBigDecimal("bid1Size")) ;
             map.put(Ticker.rateFee, x.getBigDecimal("fundingIntervalHour")) ;
-            map.put(Ticker.maxFee, x.getBigDecimal("fundingCap")) ;
+            map.put(Ticker.maxFee, x.getBigDecimal("fundingCap").multiply(BigDecimal.valueOf(100))) ;
         }              
     }
     
@@ -571,7 +571,7 @@ class BitgetService implements ApplicationRunner {
             map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
             map.put(Ticker.markPce, x.getBigDecimal("markPrice")) ;
             map.put(Ticker.turnover, x.getBigDecimal("turnover24h")) ;
-            map.put(Ticker.fee, x.getBigDecimal("fundingRate")) ;
+            map.put(Ticker.fee, x.getBigDecimal("fundingRate").multiply(BigDecimal.valueOf(100))) ;
             map.put(Ticker.askPce, x.getBigDecimal("ask1Price")) ;
             map.put(Ticker.askSz, x.getBigDecimal("ask1Size")) ;
             map.put(Ticker.bidPce, x.getBigDecimal("bid1Price")) ;
