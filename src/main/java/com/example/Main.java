@@ -217,11 +217,35 @@ class DataService implements ApplicationRunner{
             map.put(Ticker.lotSz,   x.getJSONObject("lotSizeFilter").getBigDecimal("qtyStep")) ;
             map.put(Ticker.minSz,  x.getJSONObject("lotSizeFilter").getBigDecimal("minOrderQty")) ;
             map.put(Ticker.mutil,  null) ;        
-        }         
+        }
+        json = client.send(
+                    HttpRequest.newBuilder()
+                                .uri(URI.create("https://api.bitget.com/api/v3/market/instruments?category=USDT-FUTURES"))
+                                .GET()
+                                .header("User-Agent", "Mozilla/5.0")
+                                .build(),
+                    HttpResponse.BodyHandlers.ofString()
+                  ).body();
+        for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
+            String symbol = x.getString("symbol")  ;
+            if(  !x.getString("type").equals("perpetual") 
+                    || !x.getString("status").equals("online") ) 
+                        continue ;
+            if(symbol.equals("CATUSDT")) 
+                continue ;
+            Exchange exchange = Exchange.bitget ;
+            Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+            for(var ticker:Ticker.values())
+                map.put(ticker, null) ;
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, symbol), map) ;
+            map.put(Ticker.lotSz,   x.getBigDecimal("quantityMultiplier")) ;
+            map.put(Ticker.minSz,  x.getBigDecimal("minOrderQty")) ;
+            map.put(Ticker.mutil,  null) ;     
+        }            
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
         });
-        log.info(futures.get(Exchange.bybit).toString());              
+        log.info(futures.get(Exchange.gate).toString());              
     }
 
 }
