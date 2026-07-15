@@ -466,7 +466,6 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
             map.put(Ticker.fee, x.getBigDecimal("lastFundingRate").multiply(BigDecimal.valueOf(100))) ;
         }
-        // log.info(response.headers().toString());                   
     }
 
     @Scheduled(fixedRate = 3*1000)
