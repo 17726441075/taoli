@@ -114,15 +114,15 @@ class AllConfig {
 }
 @Order(0)
 @Slf4j
+@Data
 @Service
 class DataService implements ApplicationRunner{
 
     @JSONField(serialize = false)
-    public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
+    private EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
 
 }
