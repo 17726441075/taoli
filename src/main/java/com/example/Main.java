@@ -578,5 +578,25 @@ class BitgetService implements ApplicationRunner {
             map.put(Ticker.bidSz, x.getBigDecimal("bid1Size")) ;
         }              
     }
+
+    @Scheduled(fixedRate = 40*1000)
+    public void fund() throws Exception{
+        String json = client.send(
+                        HttpRequest.newBuilder()
+                                    .uri(URI.create("https://api.bitget.com/api/v3/market/current-fund-rate?category=USDT-FUTURES"))
+                                    .GET()
+                                    .header("User-Agent", "Mozilla/5.0")
+                                    .build(),
+                        HttpResponse.BodyHandlers.ofString()
+                    ).body();
+        for(JSONObject x : JSON.parseObject(json).getList("data", JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.rateFee, x.getBigDecimal("fundingRateInterval")) ;
+            map.put(Ticker.maxFee, x.getBigDecimal("maxFundingRate").multiply(BigDecimal.valueOf(100))) ;
+        }              
+    }
     
 }
