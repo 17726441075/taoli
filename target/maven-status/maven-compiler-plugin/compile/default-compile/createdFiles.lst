@@ -5,5 +5,6 @@ com\example\DataService.class
 com\example\Exchange.class
 com\example\Taoli.class
 com\example\Ticker.class
+com\example\BinanceService.class
 com\example\Util$1.class
 com\example\Util.class

@@ -24,6 +24,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
@@ -384,6 +385,48 @@ class OkxService implements ApplicationRunner {
             } catch (Exception e) {
                 log.error("funding error",e);
             }
+    }
+
+}
+@Order(2)
+@Slf4j
+@Service
+class BinanceService implements ApplicationRunner {
+    private static final Exchange exchange = Exchange.binance ;
+
+    @Resource
+    private HttpClient client ;
+
+    private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+    
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public void tickers() throws Exception{
+        HttpResponse<String> response = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://fapi.binance.com/fapi/v1/ticker/bookTicker"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      );
+        String json = response.body() ;              
+        for( JSONObject x : JSON.parseArray(json, JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.bidPce, x.getBigDecimal("bidPrice")) ;
+            map.put(Ticker.bidSz, x.getBigDecimal("bidQty")) ;
+            map.put(Ticker.askPce, x.getBigDecimal("askPrice")) ;
+            map.put(Ticker.askSz, x.getBigDecimal("askQty")) ;
+        }
+
+        // log.info(response.headers().toString());              
     }
 
 }
