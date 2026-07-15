@@ -363,24 +363,27 @@ class OkxService implements ApplicationRunner {
         } 
     }
 
-    @Scheduled(fixedRate = 1000*60)
+    @Scheduled(initialDelay = 7000 , fixedRate = 3*60*1000)
     public void funding() throws Exception{
-
-        for(String baseCoin : tickerMap.keySet()){
-            Thread.sleep(250);
-            String json = client.send(
-                            HttpRequest.newBuilder()
-                                       .uri(URI.create("https://openapi.okx.com/api/v5/public/funding-rate?instId="+Util.baseToExchange(exchange, baseCoin)))
-                                       .GET()
-                                       .header("User-Agent", "Mozilla/5.0")
-                                       .build(),
-                            HttpResponse.BodyHandlers.ofString()
-                      ).body(); 
-            log.info(json);          
-
-
-
-        }
+        for(String baseCoin : tickerMap.keySet())
+            try {
+                Thread.sleep(250);
+                String json = client.send(
+                                HttpRequest.newBuilder()
+                                        .uri(URI.create("https://openapi.okx.com/api/v5/public/funding-rate?instId="+Util.baseToExchange(exchange, baseCoin)))
+                                        .GET()
+                                        .header("User-Agent", "Mozilla/5.0")
+                                        .build(),
+                                HttpResponse.BodyHandlers.ofString()
+                        ).body(); 
+                JSONObject x = JSONObject.parseObject(json).getJSONArray("data").getJSONObject(0) ;
+                Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+                map.put(Ticker.fee,x.getBigDecimal("fundingRate").multiply(BigDecimal.valueOf(100)));
+                map.put(Ticker.maxFee,x.getBigDecimal("maxFundingRate").multiply(BigDecimal.valueOf(100)));
+                map.put(Ticker.RateFee,BigDecimal.valueOf((x.getLongValue("nextFundingTime")-x.getLongValue("fundingTime"))/3600000));
+            } catch (Exception e) {
+                log.error("funding error",e);
+            }
     }
 
 }
