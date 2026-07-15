@@ -740,7 +740,7 @@ class GateService implements ApplicationRunner {
     }
 
     @Scheduled(fixedRate = 3000)
-    public void order_book() throws Exception{
+    public void contracts() throws Exception{
         String json = client.send(
                         HttpRequest.newBuilder()
                                     .uri(URI.create("https://api.gateio.ws/api/v4/futures/usdt/contracts"))
@@ -764,4 +764,21 @@ class GateService implements ApplicationRunner {
         }              
     }
     
+    @Scheduled(fixedRate = 3*60*1000)
+    public void tickers() throws Exception{
+        String json = client.send(
+                        HttpRequest.newBuilder()
+                                    .uri(URI.create("https://api.gateio.ws/api/v4/futures/usdt/tickers"))
+                                    .GET()
+                                    .header("User-Agent", "Mozilla/5.0")
+                                    .build(),
+                        HttpResponse.BodyHandlers.ofString()
+                     ).body();
+        for(JSONObject x : JSONArray.parseArray(json).toJavaList(JSONObject.class) ){
+            String baseCoin = Util.exchangeCoinToBase(exchange, x.getString("contract")) ;
+            if(!tickerMap.containsKey(baseCoin)) continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.turnover, x.getBigDecimal("volume_24h").multiply(map.get(Ticker.mutil)).multiply(map.get(Ticker.lastPcE))) ;
+        }              
+    }
 }
