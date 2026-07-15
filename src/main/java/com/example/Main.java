@@ -65,6 +65,22 @@ enum Ticker {
     longAskSz,shortAskSz,
     longBidSz,shortBidSz
 }
+class Util {
+    
+    public static final String exchangeCoinToBase(Exchange exchange,String coin){
+        return switch (exchange) {
+            case okx -> coin.substring(0,coin.length()-10) ;
+            case binance -> coin.substring(0,coin.length()-4) ;
+            case bybit -> coin.substring(0,coin.length()-4) ;
+            case bitget -> coin.substring(0,coin.length()-4) ;
+            case gate -> coin.substring(0,coin.length()-5) ;
+            case hyper -> coin.substring(0,coin.length()-4) ;
+            default -> null ;
+        };
+    }
+
+
+}
 @Data
 class Taoli {
     private String coin,longExchange,shortExchange;
