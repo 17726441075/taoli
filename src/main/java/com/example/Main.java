@@ -265,7 +265,6 @@ class DataService implements ApplicationRunner{
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
         });
-        log.info(futures.get(Exchange.gate).toString());              
     }
 
 }
