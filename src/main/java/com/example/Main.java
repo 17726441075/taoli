@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 
@@ -236,6 +237,34 @@ class DataService implements ApplicationRunner{
             map.put(Ticker.lotSz,   x.getBigDecimal("quantityMultiplier")) ;
             map.put(Ticker.minSz,  x.getBigDecimal("minOrderQty")) ;
             map.put(Ticker.mutil,  null) ;     
+        }
+        json = client.send(
+                  HttpRequest.newBuilder()
+                             .uri(URI.create("https://api.gateio.ws/api/v4/futures/usdt/contracts"))
+                             .GET()
+                             .header("User-Agent", "Mozilla/5.0")
+                             .build(),
+                  HttpResponse.BodyHandlers.ofString()
+                ).body();
+        for(JSONObject x : JSONArray.parseArray(json).toJavaList(JSONObject.class) ){
+            String name =  x.getString("name") ;
+            if( !x.getString("type").equals("direct")
+                || !x.getString("status").equals("trading") )
+                    continue; 
+            if(name.equals("EDGE_USDT")) 
+                continue ;
+            Exchange exchange = Exchange.gate ;
+            Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+            // for(var ticker:Ticker.values())
+            //     map.put(ticker, null) ;
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, name), map) ;
+            // map.put(Ticker.lotSz,   x.getBigDecimal("quantityMultiplier")) ;
+            // map.put(Ticker.minSz,  x.getBigDecimal("minOrderQty")) ;
+            // map.put(Ticker.mutil,  null) ;      
+            // protyMap[ge].put(name, new BigDecimal[]{
+            //                                             BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier")),
+            //                                             BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier")),
+            //                                             x.getBigDecimal("quanto_multiplier")}) ;      
         }            
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
