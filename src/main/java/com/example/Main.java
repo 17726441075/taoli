@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -130,17 +131,16 @@ class AllConfig {
 }
 @Order(0)
 @Slf4j
-@Data
 @Service
-class DataService implements ApplicationRunner{
+class DataService implements InitializingBean{
     @JSONField(serialize = false)
-    private final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
+    public static final EnumMap<Exchange,Map<String,Map<Ticker,BigDecimal>>> futures = new EnumMap<>(Exchange.class) ;
 
     @Resource
     private HttpClient client ;
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void afterPropertiesSet() throws Exception {
         for(var x:Exchange.values())
             futures.put(x, new HashMap<>()) ;
         log.info(futures.toString());
@@ -271,13 +271,21 @@ class DataService implements ApplicationRunner{
 @Order(1)
 @Slf4j
 @Service
-class OkxService {
+class OkxService implements ApplicationRunner {
+    private final Exchange exchange = Exchange.okx ;
 
     @Resource
     private HttpClient client ;
 
     @Resource
     private DataService dataService ;
+
+    private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+    
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = dataService.futures.get(exchange) ;
+    }
 
     @Scheduled(fixedRate = 200)
     public void tickers() throws Exception{
@@ -289,8 +297,14 @@ class OkxService {
                                        .build(),
                             HttpResponse.BodyHandlers.ofString()
                       ).body(); 
-        log.info(json);              
-
+        for(JSONObject x : JSONObject.parseObject(json).getJSONArray("data").toJavaList(JSONObject.class)){
+            String instId =  x.getString("instId") , baseCoin = Util.exchangeCoinToBase(exchange, instId);
+            // if( !tickerMap.containsKey(baseCoin) ) 
+                // continue ;
+            // log.info(x.toJSONString());
+        }              
         return ;
     }
+
+    
 }
