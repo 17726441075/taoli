@@ -56,7 +56,7 @@ enum Ticker {
     askSz,
     bidSz,
     fee,
-    RateFee,
+    rateFee,
     maxFee,
     lastPcE,
     turnover,
@@ -381,7 +381,7 @@ class OkxService implements ApplicationRunner {
                 Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
                 map.put(Ticker.fee,x.getBigDecimal("fundingRate").multiply(BigDecimal.valueOf(100)));
                 map.put(Ticker.maxFee,x.getBigDecimal("maxFundingRate").multiply(BigDecimal.valueOf(100)));
-                map.put(Ticker.RateFee,BigDecimal.valueOf((x.getLongValue("nextFundingTime")-x.getLongValue("fundingTime"))/3600000));
+                map.put(Ticker.rateFee,BigDecimal.valueOf((x.getLongValue("nextFundingTime")-x.getLongValue("fundingTime"))/3600000));
             } catch (Exception e) {
                 log.error("funding error",e);
             }
@@ -426,7 +426,29 @@ class BinanceService implements ApplicationRunner {
             map.put(Ticker.askSz, x.getBigDecimal("askQty")) ;
         }
 
-        // log.info(response.headers().toString());              
+        log.info(response.headers().toString());              
     }
 
+    @Scheduled(fixedRate = 4*60*1000)
+    public void fundingInfo() throws Exception{
+        String json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://fapi.binance.com/fapi/v1/fundingInfo"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body(); 
+        for( JSONObject x : JSON.parseArray(json, JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.maxFee, x.getBigDecimal("adjustedFundingRateCap")) ;
+            map.put(Ticker.rateFee, x.getBigDecimal("fundingIntervalHours")) ;
+            log.info(x.toString());
+            log.info(map.toString());
+        }
+    }
+    
 }
