@@ -1,6 +1,7 @@
 package com.example;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -23,6 +24,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -55,6 +57,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.ReferenceCountUtil;
 import jakarta.annotation.Resource;
+import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 /**
@@ -117,28 +120,6 @@ class Util {
         };
     }
 
-}
-@Data
-class Taoli {
-    private String coin,longExchange,shortExchange;
-    private BigDecimal openCha,closeCha;
-    private BigDecimal longCha,shortCha;
-    private BigDecimal allFee;
-    private BigDecimal longFee,shortFee;
-    private BigDecimal longRate,ShortRate;
-    private BigDecimal longMaxFee,shortMaxFee;
-    private BigDecimal longIndexCha,shortIndexCha;
-    private BigDecimal longTurnover,shortTurnover;
-    private BigDecimal longLast,shortLast;
-    private BigDecimal longLot,shortLot;
-    private BigDecimal longMinSz,shortMinSz;
-    private BigDecimal longMutil,shortMutil;
-    private BigDecimal longIndex,shortIndex;
-    private BigDecimal longMark,shortMark;
-    private BigDecimal longAskPce,shortAskPce;
-    private BigDecimal longBidPce,shortBidPce;
-    private BigDecimal longAskSz,shortAskSz;
-    private BigDecimal longBidSz,shortBidSz;
 }
 @EnableScheduling
 @SpringBootApplication
@@ -785,5 +766,123 @@ class GateService implements ApplicationRunner {
             map.put(Ticker.turnover, x.getBigDecimal("volume_24h").multiply(map.get(Ticker.mutil)).multiply(map.get(Ticker.lastPcE))) ;
         }              
     }
-    
+
+}
+@Builder
+@Data
+class Taoli {
+    private String coin,longExchange,shortExchange;
+    private BigDecimal openCha,closeCha;
+    private BigDecimal longCha,shortCha;
+    private BigDecimal allFee;
+    private BigDecimal longFee,shortFee;
+    private BigDecimal longRate,shortRate;
+    private BigDecimal longMaxFee,shortMaxFee;
+    private BigDecimal longIndexCha,shortIndexCha;
+    private BigDecimal longTurnover,shortTurnover;
+    private BigDecimal longLast,shortLast;
+    private BigDecimal longLot,shortLot;
+    private BigDecimal longMinSz,shortMinSz;
+    private BigDecimal longMutil,shortMutil;
+    private BigDecimal longIndex,shortIndex;
+    private BigDecimal longMark,shortMark;
+    private BigDecimal longAskPce,shortAskPce;
+    private BigDecimal longBidPce,shortBidPce;
+    private BigDecimal longAskSz,shortAskSz;
+    private BigDecimal longBidSz,shortBidSz;
+}
+@Order(6)
+@Slf4j
+@Service
+class TaoliService {
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate ;
+
+    @Scheduled(fixedRate = 10000)
+    public void tickers() throws Exception{
+        // long st = System.currentTimeMillis() ;
+        final List<Taoli> list = new LinkedList<>() ;
+        Map<Exchange,Map<String,Map<Ticker,BigDecimal>>> futuresTicker = DataService.futures ;
+        for(var a:futuresTicker.entrySet())
+            for(var b:futuresTicker.entrySet())
+                if(a.getKey()!=b.getKey())
+                    for(var enA:a.getValue().entrySet())
+                        if(b.getValue().containsKey(enA.getKey())){
+                            String coin = enA.getKey() ;
+                            Map<Ticker,BigDecimal> longTicker = enA.getValue() , shortTicker = b.getValue().get(coin) ;
+                            Taoli x = Taoli.builder()
+                                           .longFee(longTicker.get(Ticker.fee))
+                                           .shortFee(shortTicker.get(Ticker.fee))
+                                           .longRate(longTicker.get(Ticker.rateFee))
+                                           .shortRate(shortTicker.get(Ticker.rateFee))
+                                           .longMaxFee(longTicker.get(Ticker.maxFee))
+                                           .shortMaxFee(shortTicker.get(Ticker.maxFee))
+                                           .longTurnover(longTicker.get(Ticker.turnover))
+                                           .shortTurnover(shortTicker.get(Ticker.turnover))
+                                           .longLast(longTicker.get(Ticker.lastPcE))
+                                           .shortLast(shortTicker.get(Ticker.lastPcE))
+                                           .longLot(longTicker.get(Ticker.lotSz))
+                                           .shortLot(shortTicker.get(Ticker.lotSz))
+                                           .longMinSz(longTicker.get(Ticker.minSz))
+                                           .shortMinSz(shortTicker.get(Ticker.minSz))
+                                           .longMutil(longTicker.get(Ticker.mutil))
+                                           .shortMutil(shortTicker.get(Ticker.mutil))
+                                           .longIndex(longTicker.get(Ticker.indexPce))
+                                           .shortIndex(shortTicker.get(Ticker.indexPce))
+                                           .longMark(longTicker.get(Ticker.markPce))
+                                           .shortMark(shortTicker.get(Ticker.markPce))
+                                           .longAskPce(longTicker.get(Ticker.askPce))
+                                           .shortAskPce(shortTicker.get(Ticker.askPce))
+                                           .longBidPce(longTicker.get(Ticker.bidPce))
+                                           .shortBidPce(shortTicker.get(Ticker.bidPce))
+                                           .longAskSz(longTicker.get(Ticker.askSz))
+                                           .shortAskSz(shortTicker.get(Ticker.askSz))
+                                           .longBidSz(longTicker.get(Ticker.bidSz))
+                                           .shortBidSz(shortTicker.get(Ticker.bidSz))
+                                           .build() ;
+                            if(x.getShortBidPce()!=null&&x.getLongAskPce()!=null)               
+                                x.setOpenCha( 
+                                            x.getShortBidPce().subtract(x.getLongAskPce())
+                                                            .multiply(BigDecimal.valueOf(200))
+                                                            .divide(x.getShortBidPce().add(x.getLongAskPce()),7,RoundingMode.DOWN)
+                                                            );
+                            if(x.getShortAskPce()!=null&&x.getLongBidPce()!=null)                                   
+                                x.setCloseCha( 
+                                            x.getShortAskPce().subtract(x.getLongBidPce())
+                                                            .multiply(BigDecimal.valueOf(200))
+                                                            .divide(x.getShortAskPce().add(x.getLongBidPce()),7,RoundingMode.DOWN)
+                                                            );
+                            if(x.getLongAskPce()!=null&&x.getLongBidPce()!=null)                                                 
+                                x.setLongCha(
+                                            x.getLongAskPce().subtract(x.getLongBidPce())
+                                                            .multiply(BigDecimal.valueOf(200))
+                                                            .divide(x.getLongAskPce().add(x.getLongBidPce()),7,RoundingMode.DOWN)
+                                                            ); 
+                            if(x.getShortBidPce()!=null&&x.getShortBidPce()!=null)                                 
+                                x.setShortCha(
+                                            x.getShortAskPce().subtract(x.getShortBidPce())
+                                                            .multiply(BigDecimal.valueOf(200))
+                                                            .divide(x.getShortAskPce().add(x.getShortBidPce()),7,RoundingMode.DOWN)
+                                                            );
+                            if(x.getShortFee()!=null&&x.getLongFee()!=null)                                
+                                x.setAllFee(x.getShortFee().subtract(x.getLongFee()).setScale(3,RoundingMode.DOWN));
+                            if(x.getLongMark()!=null&&x.getLongIndex()!=null)
+                                x.setLongIndexCha(
+                                            x.getLongMark().subtract(x.getLongIndex())
+                                                        .divide(x.getLongIndex(),7,RoundingMode.DOWN)
+                                                        .multiply(BigDecimal.valueOf(100)).setScale(3,RoundingMode.DOWN)
+                                                            );
+                            if(x.getShortMark()!=null&&x.getShortIndex()!=null)
+                                x.setLongIndexCha(
+                                            x.getShortMark().subtract(x.getShortIndex())
+                                                        .divide(x.getShortIndex(),7,RoundingMode.DOWN)
+                                                        .multiply(BigDecimal.valueOf(100)).setScale(3,RoundingMode.DOWN)
+                                                            );                                                          
+                            list.add(x) ;   
+                        }
+        // log.info("{}",System.currentTimeMillis()-st);
+        stringRedisTemplate.opsForValue().set("qiqi", JSON.toJSONString(list));                
+    }
+
 }

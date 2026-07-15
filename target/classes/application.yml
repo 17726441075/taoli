@@ -5,5 +5,5 @@ spring:
     redis:
       host: 47.91.31.90
       port: 6379
-      password: Daisilong123.
+      password: Daisilong123
       database: 0
