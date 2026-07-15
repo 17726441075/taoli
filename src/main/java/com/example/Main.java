@@ -536,3 +536,47 @@ class BybitService implements ApplicationRunner {
     }
     
 }
+@Order(4)
+@Slf4j
+@Service
+class BitgetService implements ApplicationRunner {
+    private static final Exchange exchange = Exchange.bitget ;
+
+    @Resource
+    private HttpClient client ;
+
+    private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+    
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+    }
+
+    @Scheduled(fixedRate = 200)
+    public void tickers() throws Exception{
+        String json = client.send(
+                        HttpRequest.newBuilder()
+                                    .uri(URI.create("https://api.bitget.com/api/v3/market/tickers?category=USDT-FUTURES"))
+                                    .GET()
+                                    .header("User-Agent", "Mozilla/5.0")
+                                    .build(),
+                        HttpResponse.BodyHandlers.ofString()
+                    ).body();
+        for(JSONObject x : JSON.parseObject(json).getList("data", JSONObject.class)){
+            String baseCoin =Util.exchangeCoinToBase(exchange, x.getString("symbol")) ;
+            if(!tickerMap.containsKey(baseCoin))
+                continue ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.lastPcE, x.getBigDecimal("lastPrice")) ;
+            map.put(Ticker.indexPce, x.getBigDecimal("indexPrice")) ;
+            map.put(Ticker.markPce, x.getBigDecimal("markPrice")) ;
+            map.put(Ticker.turnover, x.getBigDecimal("turnover24h")) ;
+            map.put(Ticker.fee, x.getBigDecimal("fundingRate")) ;
+            map.put(Ticker.askPce, x.getBigDecimal("ask1Price")) ;
+            map.put(Ticker.askSz, x.getBigDecimal("ask1Size")) ;
+            map.put(Ticker.bidPce, x.getBigDecimal("bid1Price")) ;
+            map.put(Ticker.bidSz, x.getBigDecimal("bid1Size")) ;
+        }              
+    }
+    
+}
