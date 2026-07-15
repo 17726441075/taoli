@@ -296,9 +296,14 @@ class OkxService implements ApplicationRunner {
             String instId =  x.getString("instId") , baseCoin = Util.exchangeCoinToBase(exchange, instId);
             if( !tickerMap.containsKey(baseCoin) ) 
                 continue ;
-            log.info(x.toJSONString());
-        }              
-        return ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.lastPcE,x.getBigDecimal("last"));
+            map.put(Ticker.askPce, x.getBigDecimal("askPx"));
+            map.put(Ticker.askSz, x.getBigDecimal("askSz"));
+            map.put(Ticker.bidPce, x.getBigDecimal("bidPx"));
+            map.put(Ticker.bidSz, x.getBigDecimal("bidSz"));
+            map.put(Ticker.turnover, x.getBigDecimal("volCcy24h").multiply(map.get(Ticker.lastPcE)));
+        } 
     }
 
     
