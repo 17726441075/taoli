@@ -405,7 +405,7 @@ class BinanceService implements ApplicationRunner {
     }
 
     @Scheduled(fixedRate = 1000)
-    public void tickers() throws Exception{
+    public void bookTicker() throws Exception{
         HttpResponse<String> response = client.send(
                             HttpRequest.newBuilder()
                                        .uri(URI.create("https://fapi.binance.com/fapi/v1/ticker/bookTicker"))
