@@ -425,7 +425,7 @@ class BinanceService implements ApplicationRunner {
         }
     }
 
-    @Scheduled(fixedRate = 4*60*1000)
+    @Scheduled(fixedRate = 40*1000)
     public void fundingInfo() throws Exception{
         String json = client.send(
                             HttpRequest.newBuilder()
