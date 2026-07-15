@@ -172,7 +172,34 @@ class DataService implements ApplicationRunner{
             map.put(Ticker.minSz,  x.getBigDecimal("minSz").multiply(x.getBigDecimal("ctVal"))) ;
             map.put(Ticker.mutil,  x.getBigDecimal("ctVal")) ;
         }
-        log.info(futures.get(Exchange.okx).toString());              
+        json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://fapi.binance.com/fapi/v1/exchangeInfo"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body();
+        for(JSONObject x : JSONObject.parseObject(json).getJSONArray("symbols").toJavaList(JSONObject.class)){
+            String symbol = x.getString("symbol") ;
+            if(  !x.getString("contractType").endsWith("PERPETUAL")
+                    || !x.getString("marginAsset").equals("USDT")
+                    || !x.getString("status").equals("TRADING") )
+                        continue;
+            Exchange exchange = Exchange.binance ;
+            Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+            for(var ticker:Ticker.values())
+                map.put(ticker, null) ;
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, symbol), map) ;            
+            // protyMap[ba].put(symbol, new BigDecimal[]{
+            //                                             x.getJSONArray("filters").getJSONObject(2).getBigDecimal("stepSize"),
+            //                                             x.getJSONArray("filters").getJSONObject(2).getBigDecimal("minQty"),
+            //                                             null}) ;               
+        }
+        futures.forEach((k,v)->{
+            log.info("{} {}",k,v.size());
+        });
+        log.info(futures.get(Exchange.binance).toString());              
     }
 
 }
