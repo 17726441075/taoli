@@ -274,12 +274,23 @@ class DataService implements ApplicationRunner{
 class OkxService {
 
     @Resource
+    private HttpClient client ;
+
+    @Resource
     private DataService dataService ;
 
     @Scheduled(fixedRate = 200)
-    public void test(){
-        log.info("tets");
+    public void tickers() throws Exception{
+        String json = client.send(
+                            HttpRequest.newBuilder()
+                                       .uri(URI.create("https://openapi.okx.com/api/v5/market/tickers?instType=SWAP"))
+                                       .GET()
+                                       .header("User-Agent", "Mozilla/5.0")
+                                       .build(),
+                            HttpResponse.BodyHandlers.ofString()
+                      ).body(); 
+        log.info(json);              
+
         return ;
     }
-    
 }
