@@ -202,7 +202,9 @@ class DataService implements InitializingBean{
                         continue;
             if(instId.equals("BB-USDT-SWAP")||
                 instId.equals("OPENAI-USDT-SWAP")||
-                instId.equals("ANTHROPIC-USDT-SWAP")) 
+                instId.equals("ANTHROPIC-USDT-SWAP")||
+                instId.equals("ON-USDT-SWAP")
+            ) 
                 continue ;
             Exchange exchange = Exchange.okx ;
             Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
