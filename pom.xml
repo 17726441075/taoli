@@ -129,6 +129,12 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
         <version>4.2.15.Final</version>
+        <exclusions>
+            <exclusion>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-io_uring</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
         <groupId>com.alibaba.fastjson2</groupId>
