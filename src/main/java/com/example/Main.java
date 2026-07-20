@@ -770,6 +770,24 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
 @Order(6)
 @Slf4j
 @Service
+class HyperService implements ApplicationRunner {
+    private static final Exchange exchange = Exchange.hyper ;
+
+    @Resource
+    private HttpClient client ;
+
+    private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+    
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+        log.info("sssssssssssssssssssss");
+    }
+
+}
+@Order(7)
+@Slf4j
+@Service
 class TaoliService {
 
     @Resource
@@ -838,7 +856,7 @@ class TaoliService {
                                                             .multiply(BigDecimal.valueOf(100))
                                                             .divide(x.getLongAskPce().add(x.getLongBidPce().divide(BigDecimal.TWO,7,RoundingMode.DOWN)),3,RoundingMode.DOWN)
                                                             ); 
-                            if(x.getShortBidPce()!=null&&x.getShortBidPce()!=null)                                 
+                            if(x.getShortAskPce()!=null&&x.getShortBidPce()!=null)                                 
                                 x.setShortCha(
                                             x.getShortAskPce().subtract(x.getShortBidPce())
                                                             .multiply(BigDecimal.valueOf(100))

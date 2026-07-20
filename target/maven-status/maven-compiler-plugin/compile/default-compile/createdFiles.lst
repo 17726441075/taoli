@@ -11,5 +11,6 @@ com\example\GateService.class
 com\example\OkxService.class
 com\example\DataService.class
 com\example\Exchange.class
+com\example\HyperService.class
 com\example\BitgetService.class
 com\example\Util.class
