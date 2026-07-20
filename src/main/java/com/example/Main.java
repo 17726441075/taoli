@@ -1,5 +1,6 @@
 package com.example;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
@@ -670,32 +671,7 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
     private static final EventLoopGroup io = new MultiThreadIoEventLoopGroup(1,  EpollIoHandler.newFactory());
     private static final Exchange exchange = Exchange.gate ;
 
-     // 存一下当前会话，方便主动发消息
     private WebSocketSession session;
-
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
-        this.session = session;
-        log.info("----------------(((((((((---");
-    }
-    @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
-        System.out.println("收到消息：" + message.getPayload());
-    }
-
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        System.out.println("连接断开");
-    }
-
-    // 自定义发送方法
-    public void send(String msg) {
-        try {
-            if (session != null && session.isOpen()) {
-                session.sendMessage(new TextMessage(msg));
-            }
-        } catch (Exception e) { /* 处理异常 */ }
-    }
 
     @Resource
     private HttpClient client ;
@@ -704,6 +680,46 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
     private ThreadPoolTaskScheduler taskScheduler ;
 
     private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
+
+    @Scheduled(fixedRate = 5*1000)
+    public void ping() throws IOException{
+        if(session!=null&&session.isOpen())
+            session.sendMessage(new TextMessage(String.format(
+                                                                """
+                                                                    {
+                                                                    "time": %s,
+                                                                    "channel":"futures.ping"
+                                                                    }
+                                                                """, System.currentTimeMillis()/1000)));
+    }
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        this.session = session;
+        List<List<String>> buketList = List.of(new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>());
+        int ind = 0 ;
+        for(String x:tickerMap.keySet()){
+            buketList.get(ind).add(x+"_USDT") ;
+            ind = ++ind%buketList.size() ;
+        }
+        for(List<String> payload : buketList){
+            String subStr2 = JSON.toJSONString(Map.of("time",System.currentTimeMillis()/1000,"channel","futures.book_ticker","event","subscribe","payload",payload)) ;
+            try {
+                session.sendMessage(new TextMessage(subStr2));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            log.info("bytes: {}",subStr2.getBytes(StandardCharsets.UTF_8).length);
+        }
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) { session = null ;}
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        log.info(message.getPayload());
+    }
     
     @Override
     public void run(ApplicationArguments args) throws Exception {
