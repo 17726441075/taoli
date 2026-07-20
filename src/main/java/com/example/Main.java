@@ -795,7 +795,7 @@ class TaoliService {
     private StringRedisTemplate stringRedisTemplate ;
 
     @Scheduled(fixedRate = 1*1000)
-    public void tickers() throws Exception{
+    public void qiqi() throws Exception{
         // long st = System.currentTimeMillis() ;
         qiqiList = new LinkedList<>() ;
         Map<Exchange,Map<String,Map<Ticker,BigDecimal>>> futuresTicker = DataService.futures ;
