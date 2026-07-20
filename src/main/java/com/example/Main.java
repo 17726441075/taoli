@@ -659,6 +659,12 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
 
     private Map<String,Map<Ticker,BigDecimal>> tickerMap ;
 
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        this.tickerMap = DataService.futures.get(exchange) ;
+        stndardClient.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
+    }
+
     @Scheduled(fixedRate = 5*1000)
     public void ping() throws IOException{
         if(session!=null&&session.isOpen())
@@ -717,12 +723,6 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
         stndardClient.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
     }
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        this.tickerMap = DataService.futures.get(exchange) ;
-        stndardClient.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
-    }
-
     @Scheduled(fixedRate = 3000)
     public void contracts() throws Exception{
         String json = client.send(
@@ -775,7 +775,7 @@ class TaoliService {
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
 
-    @Scheduled(fixedRate = 120*1000)
+    @Scheduled(fixedRate = 1*1000)
     public void tickers() throws Exception{
         // long st = System.currentTimeMillis() ;
         final List<Taoli> list = new LinkedList<>() ;
