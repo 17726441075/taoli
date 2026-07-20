@@ -646,6 +646,7 @@ class BitgetService implements ApplicationRunner {
 @Slf4j
 @Service
 class GateService extends TextWebSocketHandler implements ApplicationRunner {
+    private static final StandardWebSocketClient stndardClient = new StandardWebSocketClient(); 
     private static final Exchange exchange = Exchange.gate ;
 
     private WebSocketSession session;
@@ -691,9 +692,6 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) { session = null ;}
-
-    @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         String text = message.getPayload() ;
         taskScheduler.execute(()->{
@@ -714,10 +712,15 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
     }
     
     @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) { 
+        session = null ;
+        stndardClient.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
+    }
+
+    @Override
     public void run(ApplicationArguments args) throws Exception {
         this.tickerMap = DataService.futures.get(exchange) ;
-        StandardWebSocketClient client = new StandardWebSocketClient();
-        client.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
+        stndardClient.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
     }
 
     @Scheduled(fixedRate = 3000)
