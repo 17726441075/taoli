@@ -40,28 +40,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.MultiThreadIoEventLoopGroup;
-import io.netty.channel.epoll.EpollIoHandler;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.HttpClientCodec;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig;
-import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolHandler;
-import io.netty.handler.codec.http.websocketx.WebSocketVersion;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.ReferenceCountUtil;
 import jakarta.annotation.Resource;
 import lombok.Builder;
 import lombok.Data;
@@ -668,7 +646,6 @@ class BitgetService implements ApplicationRunner {
 @Slf4j
 @Service
 class GateService extends TextWebSocketHandler implements ApplicationRunner {
-    private static final EventLoopGroup io = new MultiThreadIoEventLoopGroup(1,  EpollIoHandler.newFactory());
     private static final Exchange exchange = Exchange.gate ;
 
     private WebSocketSession session;
@@ -741,100 +718,6 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
         this.tickerMap = DataService.futures.get(exchange) ;
         StandardWebSocketClient client = new StandardWebSocketClient();
         client.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
-        // connectToGate() ;
-    }
-
-    private final void connectToGate() throws Exception {
-        URI uri = URI.create("wss://fx-ws.gateio.ws/v4/ws/usdt") ;
-        String inetHost = uri.getHost() ;
-        int port = uri.getPort() <= 0 ? ("wss".equals(uri.getScheme()) ? 443 : 80) : uri.getPort() ;
-        SslContext ssl = SslContextBuilder.forClient().build();
-        new Bootstrap()
-            .group(io) 
-            .channel(EpollSocketChannel.class) 
-            .remoteAddress(inetHost, port) 
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15 * 1000) 
-            .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) {
-                                if("wss".equals(uri.getScheme()))
-                                    ch.pipeline().addLast(ssl.newHandler(ch.alloc(),inetHost ,port)) ;
-                                ch.pipeline()
-                                    .addLast(new HttpClientCodec())
-                                    .addLast(new HttpObjectAggregator(65536))
-                                    .addLast(new WebSocketClientProtocolHandler( 
-                                            WebSocketClientProtocolConfig.newBuilder()
-                                                                        .webSocketUri(uri)                                
-                                                                        .version(WebSocketVersion.V13)
-                                                                        .maxFramePayloadLength(1024*1024*10)                        
-                                                                        .handshakeTimeoutMillis(15 * 1000) 
-                                                                        .build()
-                                    ))
-                                    .addLast(new IdleStateHandler(10, 5, 0))
-                                    .addLast(new ChannelDuplexHandler() {
-                                                @Override
-                                                public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-                                                    if (evt instanceof IdleStateEvent e ) {
-                                                        if (e.state() == IdleState.WRITER_IDLE)
-                                                            ctx.writeAndFlush(new TextWebSocketFrame(String.format(
-                                                                """
-                                                                    {
-                                                                    "time": %s,
-                                                                    "channel":"futures.ping"
-                                                                    }
-                                                                """, System.currentTimeMillis()/1000) )) ;
-                                                        if(e.state() == IdleState.READER_IDLE){
-                                                            log.error("{}readTimeOut",exchange);
-                                                            ctx.close() ;
-                                                        }
-                                                    }
-                                                    if (evt == WebSocketClientProtocolHandler.ClientHandshakeStateEvent.HANDSHAKE_COMPLETE){
-                                                        List<List<String>> buketList = List.of(new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>(),new LinkedList<>());
-                                                        int ind = 0 ;
-                                                        for(String x:tickerMap.keySet()){
-                                                            buketList.get(ind).add(x+"_USDT") ;
-                                                            ind = ++ind%buketList.size() ;
-                                                        }
-                                                        for(List<String> payload : buketList){
-                                                            String subStr2 = JSON.toJSONString(Map.of("time",System.currentTimeMillis()/1000,"channel","futures.book_ticker","event","subscribe","payload",payload)) ;
-                                                            ctx.writeAndFlush(new TextWebSocketFrame(subStr2)) ;
-                                                            log.info("bytes: {}",subStr2.getBytes(StandardCharsets.UTF_8).length);
-                                                        }
-                                                    }
-                                                }
-                                                @Override
-                                                public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                                    if(msg instanceof TextWebSocketFrame twsf){
-                                                        String text = twsf.text() ;
-                                                        taskScheduler.execute(()->{
-                                                            JSONObject jobj = JSON.parseObject(text) ;
-                                                            String channel = jobj.getString("channel") ;
-                                                            if(channel.startsWith("futures.pong") || !jobj.containsKey("event") || !"update".equals(jobj.getString("event"))) {
-                                                                log.info("{} {}",exchange,text);
-                                                                return ;
-                                                            }
-                                                            JSONObject result = jobj.getJSONObject("result") ;
-                                                            String baseCoin = Util.exchangeCoinToBase(exchange, result.getString("s")) ;
-                                                            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
-                                                            map.put(Ticker.askPce, result.getBigDecimal("a")) ;
-                                                            map.put(Ticker.askSz, result.getBigDecimal("A")) ;
-                                                            map.put(Ticker.bidPce, result.getBigDecimal("b")) ;
-                                                            map.put(Ticker.bidSz, result.getBigDecimal("B")) ;
-                                                        });
-                                                    }
-                                                    ReferenceCountUtil.release(msg);
-                                                }
-                                                @Override
-                                                public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                                                    Thread.sleep(1000) ;
-                                                    connectToGate();
-                                                }
-                                    });
-                        }         
-                    }
-            )
-            .connect()
-            .sync() ;
     }
 
     @Scheduled(fixedRate = 3000)
