@@ -789,6 +789,7 @@ class HyperService implements ApplicationRunner {
 @Slf4j
 @Service
 class TaoliService {
+    private List<Taoli> qiqList = null ;
 
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
@@ -796,7 +797,7 @@ class TaoliService {
     @Scheduled(fixedRate = 1*1000)
     public void tickers() throws Exception{
         // long st = System.currentTimeMillis() ;
-        final List<Taoli> list = new LinkedList<>() ;
+        qiqList = new LinkedList<>() ;
         Map<Exchange,Map<String,Map<Ticker,BigDecimal>>> futuresTicker = DataService.futures ;
         for(var a:futuresTicker.entrySet())
             for(var b:futuresTicker.entrySet())
@@ -876,10 +877,10 @@ class TaoliService {
                                                         .divide(x.getShortIndex(),7,RoundingMode.DOWN)
                                                         .multiply(BigDecimal.valueOf(100)).setScale(3,RoundingMode.DOWN)
                                                             );                                                          
-                            list.add(x) ;   
+                            qiqList.add(x) ;   
                         }
         // log.info("{}",System.currentTimeMillis()-st);
-        stringRedisTemplate.opsForValue().set("qiqi", JSON.toJSONString(list));                
+        stringRedisTemplate.opsForValue().set("qiqi", JSON.toJSONString(qiqList));                
     }
 
 }
