@@ -718,7 +718,22 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
-        log.info(message.getPayload());
+        String text = message.getPayload() ;
+        taskScheduler.execute(()->{
+            JSONObject jobj = JSON.parseObject(text) ;
+            String channel = jobj.getString("channel") ;
+            if(channel.startsWith("futures.pong") || !jobj.containsKey("event") || !"update".equals(jobj.getString("event"))) {
+                log.info("{} {}",exchange,text);
+                return ;
+            }
+            JSONObject result = jobj.getJSONObject("result") ;
+            String baseCoin = Util.exchangeCoinToBase(exchange, result.getString("s")) ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(baseCoin) ;
+            map.put(Ticker.askPce, result.getBigDecimal("a")) ;
+            map.put(Ticker.askSz, result.getBigDecimal("A")) ;
+            map.put(Ticker.bidPce, result.getBigDecimal("b")) ;
+            map.put(Ticker.bidSz, result.getBigDecimal("B")) ;
+        });
     }
     
     @Override
