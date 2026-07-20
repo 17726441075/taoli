@@ -126,7 +126,7 @@ class Util {
             case bybit -> coin.substring(0,coin.length()-4) ;
             case bitget -> coin.substring(0,coin.length()-4) ;
             case gate -> coin.substring(0,coin.length()-5) ;
-            case hyper -> coin.substring(0,coin.length()-4) ;
+            case hyper -> coin ;
             default -> null ;
         };
     }
@@ -138,7 +138,7 @@ class Util {
             case bybit -> coin+"USDT" ;
             case bitget -> coin+"USDT"  ;
             case gate -> coin+"_USDT";
-            case hyper -> coin.substring(0,coin.length()-4) ;
+            case hyper -> coin ;
             default -> null ;
         };
     }
@@ -306,7 +306,30 @@ class DataService implements InitializingBean{
             map.put(Ticker.lotSz,  BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier"))) ;
             map.put(Ticker.minSz,  BigDecimal.ONE.multiply(x.getBigDecimal("quanto_multiplier"))) ;
             map.put(Ticker.mutil,  x.getBigDecimal("quanto_multiplier")) ;      
-        }            
+        }
+        json = client.send(
+                  HttpRequest.newBuilder()
+                             .uri(URI.create("https://api.hyperliquid.xyz/info"))
+                             .POST(HttpRequest.BodyPublishers.ofString("{\"type\": \"metaAndAssetCtxs\"}"))
+                             .header("Content-Type", "application/json")
+                             .header("User-Agent", "Mozilla/5.0")
+                             .build(),
+                  HttpResponse.BodyHandlers.ofString()
+                ).body();
+        for(var jobj:JSON.parseArray(json).getJSONObject(0).getList("universe",JSONObject.class)){
+            if(  
+                jobj.getString("isDelisted")!=null     &&  "true".equals(jobj.getString("isDelisted")) ||
+                jobj.getString("onlyIsolated")!=null   &&  "true".equals(jobj.getString("onlyIsolated"))||
+                jobj.getString("marginMode")!=null     &&   jobj.getString("marginMode").equals("strictIsolated")
+            ) 
+                continue ;
+            String name = jobj.getString("name") ;
+            Exchange exchange = Exchange.hyper ;
+            Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+            for(var ticker:Ticker.values())
+                map.put(ticker, null) ;
+            futures.get(exchange).put(Util.exchangeCoinToBase(exchange, name), map) ;
+        }      
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
         });
