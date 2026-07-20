@@ -794,7 +794,7 @@ class TaoliService {
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
 
-    @Scheduled(fixedRate = 1*1000)
+    @Scheduled(fixedRate = 120*1000)
     public void qiqi() throws Exception{
         // long st = System.currentTimeMillis() ;
         qiqiList = new LinkedList<>() ;
