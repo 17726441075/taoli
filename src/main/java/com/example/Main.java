@@ -29,6 +29,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.client.standard.StandardWebSocketClient;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -661,9 +666,36 @@ class BitgetService implements ApplicationRunner {
 @Order(5)
 @Slf4j
 @Service
-class GateService implements ApplicationRunner {
+class GateService extends TextWebSocketHandler implements ApplicationRunner {
     private static final EventLoopGroup io = new MultiThreadIoEventLoopGroup(1,  EpollIoHandler.newFactory());
     private static final Exchange exchange = Exchange.gate ;
+
+     // 存一下当前会话，方便主动发消息
+    private WebSocketSession session;
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        this.session = session;
+        log.info("----------------(((((((((---");
+    }
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+        System.out.println("收到消息：" + message.getPayload());
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        System.out.println("连接断开");
+    }
+
+    // 自定义发送方法
+    public void send(String msg) {
+        try {
+            if (session != null && session.isOpen()) {
+                session.sendMessage(new TextMessage(msg));
+            }
+        } catch (Exception e) { /* 处理异常 */ }
+    }
 
     @Resource
     private HttpClient client ;
@@ -676,7 +708,9 @@ class GateService implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.tickerMap = DataService.futures.get(exchange) ;
-        connectToGate() ;
+        StandardWebSocketClient client = new StandardWebSocketClient();
+        client.execute(this, "wss://fx-ws.gateio.ws/v4/ws/usdt");
+        // connectToGate() ;
     }
 
     private final void connectToGate() throws Exception {
