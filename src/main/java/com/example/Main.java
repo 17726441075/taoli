@@ -314,6 +314,25 @@ class DataService implements InitializingBean{
                 map.put(ticker, null) ;
             futures.get(exchange).put(Util.exchangeCoinToBase(exchange, name), map) ;
         }      
+        json = client.send(
+                  HttpRequest.newBuilder()
+                             .uri(URI.create("https://api.hyperliquid.xyz/info"))
+                             .POST(HttpRequest.BodyPublishers.ofString("{\"type\": \"perpCategories\"}"))
+                             .header("Content-Type", "application/json")
+                             .header("User-Agent", "Mozilla/5.0")
+                             .build(),
+                  HttpResponse.BodyHandlers.ofString()
+                ).body();
+        for(JSONArray arr :JSON.parseArray(json,JSONArray.class)){
+            String coin = arr.getString(0).split(":")[1] , type = arr.getString(1) ;
+            if(type.equals("stocks")){
+                Exchange exchange = Exchange.hyper ;
+                Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
+                for(var ticker:Ticker.values())
+                    map.put(ticker, null) ;
+                futures.get(exchange).put(Util.exchangeCoinToBase(exchange, coin), map) ;
+            }
+        }
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
         });
@@ -818,7 +837,8 @@ class HyperService implements ApplicationRunner {
             map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
             map.put(Ticker.markPce, ticker.getBigDecimal("markPx")) ;
             map.put(Ticker.lastPcE, ticker.getBigDecimal("midPx")) ;
-            log.info(name+" "+ticker.toString());
+            // map.put(Ticker.maxFee, BigDecimal.valueOf(2)) ;
+            // log.info(name+" "+ticker.toString());
         }
     }
 
@@ -832,7 +852,7 @@ class TaoliService {
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
 
-    @Scheduled(fixedRate = 1*1000)
+    @Scheduled(fixedRate = 120*1000)
     public void qiqi() throws Exception{
         // long st = System.currentTimeMillis() ;
         qiqiList = new LinkedList<>() ;
