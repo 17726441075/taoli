@@ -772,6 +772,7 @@ class GateService extends TextWebSocketHandler implements ApplicationRunner {
 @Slf4j
 @Service
 class HyperService implements ApplicationRunner {
+    private static final BigDecimal b100000000 = BigDecimal.valueOf(10000000000000L) ;
     private static final Exchange exchange = Exchange.hyper ;
 
     @Resource
@@ -810,6 +811,14 @@ class HyperService implements ApplicationRunner {
             Map<Ticker,BigDecimal> map = tickerMap.get(name) ;
             map.put(Ticker.bidPce, panKou.getBigDecimal(0)) ;
             map.put(Ticker.askPce, panKou.getBigDecimal(1)) ;
+            map.put(Ticker.bidPce, b100000000) ;
+            map.put(Ticker.askPce, b100000000) ;
+            map.put(Ticker.fee, ticker.getBigDecimal("funding").multiply(BigDecimal.valueOf(100)));
+            map.put(Ticker.turnover, ticker.getBigDecimal("dayNtlVlm"));
+            map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
+            map.put(Ticker.markPce, ticker.getBigDecimal("markPx")) ;
+            map.put(Ticker.lastPcE, ticker.getBigDecimal("midPx")) ;
+            log.info(name+" "+ticker.toString());
         }
     }
 
@@ -823,7 +832,7 @@ class TaoliService {
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
 
-    @Scheduled(fixedRate = 120*1000)
+    @Scheduled(fixedRate = 1*1000)
     public void qiqi() throws Exception{
         // long st = System.currentTimeMillis() ;
         qiqiList = new LinkedList<>() ;
