@@ -308,6 +308,8 @@ class DataService implements InitializingBean{
             ) 
                 continue ;
             String name = jobj.getString("name") ;
+            if(name.equals("BB")) 
+                continue ;
             Exchange exchange = Exchange.hyper ;
             Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
             for(var ticker:Ticker.values())
@@ -325,6 +327,8 @@ class DataService implements InitializingBean{
                 ).body();
         for(JSONArray arr :JSON.parseArray(json,JSONArray.class)){
             String coin = arr.getString(0).split(":")[1]  ;
+            if(coin.equals("BB")) 
+                continue ;
             Exchange exchange = Exchange.hyper ;
             Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
             for(var ticker:Ticker.values())
@@ -828,8 +832,8 @@ class HyperService implements ApplicationRunner {
             Map<Ticker,BigDecimal> map = tickerMap.get(name) ;
             map.put(Ticker.bidPce, panKou.getBigDecimal(0)) ;
             map.put(Ticker.askPce, panKou.getBigDecimal(1)) ;
-            map.put(Ticker.bidPce, b100000000) ;
-            map.put(Ticker.askPce, b100000000) ;
+            map.put(Ticker.bidSz, b100000000) ;
+            map.put(Ticker.askSz, b100000000) ;
             map.put(Ticker.fee, ticker.getBigDecimal("funding").multiply(BigDecimal.valueOf(100)));
             map.put(Ticker.turnover, ticker.getBigDecimal("dayNtlVlm"));
             map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
@@ -840,44 +844,45 @@ class HyperService implements ApplicationRunner {
         }
     }
 
-    // @Scheduled(fixedRate = 1000)
-    // public void tickers2() throws Exception{
-    //     String json = client.send(
-    //               HttpRequest.newBuilder()
-    //                          .uri(URI.create("https://api.hyperliquid.xyz/info"))
-    //                          .POST(HttpRequest.BodyPublishers.ofString("{\"type\": \"metaAndAssetCtxs\"}"))
-    //                          .header("Content-Type", "application/json")
-    //                          .header("User-Agent", "Mozilla/5.0")
-    //                          .build(),
-    //               HttpResponse.BodyHandlers.ofString()
-    //             ).body();
-    //     log.info(json);        
-    //     JSONArray arr = JSON.parseArray(json) , universe =  arr.getJSONObject(0).getJSONArray("universe") , tickers = arr.getJSONArray(1) ;
-    //     for(int i = 0 ; i<universe.size() ; ++i ){
-    //         JSONObject jobj = universe.getJSONObject(i) , ticker = tickers.getJSONObject(i) ;
-    //         if(  
-    //             jobj.getString("isDelisted")!=null     &&  "true".equals(jobj.getString("isDelisted")) ||
-    //             jobj.getString("onlyIsolated")!=null   &&  "true".equals(jobj.getString("onlyIsolated"))||
-    //             jobj.getString("marginMode")!=null     &&   jobj.getString("marginMode").equals("strictIsolated")
-    //         ) continue ;
-    //         String name = jobj.getString("name") ;
-    //         if(!tickerMap.containsKey(name)) 
-    //             continue ; 
-    //         JSONArray panKou = ticker.getJSONArray("impactPxs") ;
-    //         Map<Ticker,BigDecimal> map = tickerMap.get(name) ;
-    //         map.put(Ticker.bidPce, panKou.getBigDecimal(0)) ;
-    //         map.put(Ticker.askPce, panKou.getBigDecimal(1)) ;
-    //         map.put(Ticker.bidPce, b100000000) ;
-    //         map.put(Ticker.askPce, b100000000) ;
-    //         map.put(Ticker.fee, ticker.getBigDecimal("funding").multiply(BigDecimal.valueOf(100)));
-    //         map.put(Ticker.turnover, ticker.getBigDecimal("dayNtlVlm"));
-    //         map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
-    //         map.put(Ticker.markPce, ticker.getBigDecimal("markPx")) ;
-    //         map.put(Ticker.lastPcE, ticker.getBigDecimal("midPx")) ;
-    //         // map.put(Ticker.maxFee, BigDecimal.valueOf(2)) ;
-    //         // log.info(name+" "+ticker.toString());
-    //     }
-    // }
+    @Scheduled(fixedRate = 1000)
+    public void tickers2() throws Exception{
+        String json = client.send(
+                  HttpRequest.newBuilder()
+                             .uri(URI.create("https://api.hyperliquid.xyz/info"))
+                             .POST(HttpRequest.BodyPublishers.ofString("{\"type\": \"metaAndAssetCtxs\",\"dex\": \"xyz\"}"))
+                             .header("Content-Type", "application/json")
+                             .header("User-Agent", "Mozilla/5.0")
+                             .build(),
+                  HttpResponse.BodyHandlers.ofString()
+                ).body();
+        JSONArray arr = JSON.parseArray(json) , universe =  arr.getJSONObject(0).getJSONArray("universe") , tickers = arr.getJSONArray(1) ;
+        for(int i = 0 ; i<universe.size() ; ++i ){
+            JSONObject jobj = universe.getJSONObject(i) , ticker = tickers.getJSONObject(i) ;
+            // if(  
+            //     jobj.getString("isDelisted")!=null     &&  "true".equals(jobj.getString("isDelisted")) ||
+            //     jobj.getString("onlyIsolated")!=null   &&  "true".equals(jobj.getString("onlyIsolated"))||
+            //     jobj.getString("marginMode")!=null     &&   jobj.getString("marginMode").equals("strictIsolated")
+            // ) continue ;
+            String name = jobj.getString("name").split(":")[1] ;
+            if(!tickerMap.containsKey(name)) 
+                continue ; 
+            JSONArray panKou = ticker.getJSONArray("impactPxs") ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(name) ;
+            if(panKou!=null){
+                map.put(Ticker.bidPce, panKou.getBigDecimal(0)) ;
+                map.put(Ticker.askPce, panKou.getBigDecimal(1)) ;
+            }
+            map.put(Ticker.bidSz, b100000000) ;
+            map.put(Ticker.askSz, b100000000) ;
+            map.put(Ticker.fee, ticker.getBigDecimal("funding").multiply(BigDecimal.valueOf(100)));
+            map.put(Ticker.turnover, ticker.getBigDecimal("dayNtlVlm"));
+            map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
+            map.put(Ticker.markPce, ticker.getBigDecimal("markPx")) ;
+            map.put(Ticker.lastPcE, ticker.getBigDecimal("midPx")) ;
+            // map.put(Ticker.maxFee, BigDecimal.valueOf(2)) ;
+            // log.info(name+" "+ticker.toString());
+        }
+    }
 
 }
 @Order(7)
@@ -889,7 +894,7 @@ class TaoliService {
     @Resource
     private StringRedisTemplate stringRedisTemplate ;
 
-    @Scheduled(fixedRate = 120*1000)
+    @Scheduled(fixedRate = 1*1000)
     public void qiqi() throws Exception{
         // long st = System.currentTimeMillis() ;
         qiqiList = new LinkedList<>() ;
