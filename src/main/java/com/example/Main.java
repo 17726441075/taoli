@@ -317,6 +317,7 @@ class DataService implements InitializingBean{
         futures.forEach((k,v)->{
             log.info("{} {}",k,v.size());
         });
+        log.info(futures.get(Exchange.hyper).keySet().toString());
     }
 
 }
@@ -781,7 +782,35 @@ class HyperService implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.tickerMap = DataService.futures.get(exchange) ;
-        log.info("sssssssssssssssssssss");
+    }
+    
+    @Scheduled(fixedRate = 1000)
+    public void tickers() throws Exception{
+        String json = client.send(
+                  HttpRequest.newBuilder()
+                             .uri(URI.create("https://api.hyperliquid.xyz/info"))
+                             .POST(HttpRequest.BodyPublishers.ofString("{\"type\": \"metaAndAssetCtxs\"}"))
+                             .header("Content-Type", "application/json")
+                             .header("User-Agent", "Mozilla/5.0")
+                             .build(),
+                  HttpResponse.BodyHandlers.ofString()
+                ).body();
+        JSONArray arr = JSON.parseArray(json) , universe =  arr.getJSONObject(0).getJSONArray("universe") , tickers = arr.getJSONArray(1) ;
+        for(int i = 0 ; i<universe.size() ; ++i ){
+            JSONObject jobj = universe.getJSONObject(i) , ticker = tickers.getJSONObject(i) ;
+            if(  
+                jobj.getString("isDelisted")!=null     &&  "true".equals(jobj.getString("isDelisted")) ||
+                jobj.getString("onlyIsolated")!=null   &&  "true".equals(jobj.getString("onlyIsolated"))||
+                jobj.getString("marginMode")!=null     &&   jobj.getString("marginMode").equals("strictIsolated")
+            ) continue ;
+            String name = jobj.getString("name") ;
+            if(!tickerMap.containsKey(name)) 
+                continue ; 
+            JSONArray panKou = ticker.getJSONArray("impactPxs") ;
+            Map<Ticker,BigDecimal> map = tickerMap.get(name) ;
+            map.put(Ticker.bidPce, panKou.getBigDecimal(0)) ;
+            map.put(Ticker.askPce, panKou.getBigDecimal(1)) ;
+        }
     }
 
 }
