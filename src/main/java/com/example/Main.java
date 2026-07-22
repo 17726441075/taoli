@@ -841,8 +841,8 @@ class HyperService implements ApplicationRunner {
             map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
             map.put(Ticker.markPce, ticker.getBigDecimal("markPx")) ;
             map.put(Ticker.lastPcE, ticker.getBigDecimal("midPx")) ;
-            // map.put(Ticker.maxFee, BigDecimal.valueOf(2)) ;
-            // log.info(name+" "+ticker.toString());
+            map.put(Ticker.maxFee, BigDecimal.valueOf(4)) ;
+            map.put(Ticker.rateFee, BigDecimal.ONE) ;
         }
     }
 
@@ -881,8 +881,8 @@ class HyperService implements ApplicationRunner {
             map.put(Ticker.indexPce, ticker.getBigDecimal("oraclePx"));
             map.put(Ticker.markPce, ticker.getBigDecimal("markPx")) ;
             map.put(Ticker.lastPcE, ticker.getBigDecimal("midPx")) ;
-            // map.put(Ticker.maxFee, BigDecimal.valueOf(2)) ;
-            // log.info(name+" "+ticker.toString());
+            map.put(Ticker.maxFee, BigDecimal.valueOf(4)) ;
+            map.put(Ticker.rateFee, BigDecimal.ONE) ;
         }
     }
 
