@@ -860,11 +860,6 @@ class HyperService implements ApplicationRunner {
         JSONArray arr = JSON.parseArray(json) , universe =  arr.getJSONObject(0).getJSONArray("universe") , tickers = arr.getJSONArray(1) ;
         for(int i = 0 ; i<universe.size() ; ++i ){
             JSONObject jobj = universe.getJSONObject(i) , ticker = tickers.getJSONObject(i) ;
-            // if(  
-            //     jobj.getString("isDelisted")!=null     &&  "true".equals(jobj.getString("isDelisted")) ||
-            //     jobj.getString("onlyIsolated")!=null   &&  "true".equals(jobj.getString("onlyIsolated"))||
-            //     jobj.getString("marginMode")!=null     &&   jobj.getString("marginMode").equals("strictIsolated")
-            // ) continue ;
             String name = jobj.getString("name").split(":")[1] ;
             if(!tickerMap.containsKey(name)) 
                 continue ; 
