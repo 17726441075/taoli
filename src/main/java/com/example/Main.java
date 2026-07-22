@@ -235,6 +235,8 @@ class DataService implements InitializingBean{
                     || !x.getString("status").equals("Trading") )
                     continue ;
             Exchange exchange = Exchange.bybit ;
+            if( Util.exchangeCoinToBase(exchange, symbol).equals("ON") )
+                continue ; 
             Map<Ticker,BigDecimal> map = new EnumMap<>(Ticker.class) ;
             for(var ticker:Ticker.values())
                 map.put(ticker, null) ;
